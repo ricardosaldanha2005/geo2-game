@@ -1,0 +1,228 @@
+/* Leaflet CSS */
+@import 'leaflet/dist/leaflet.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Estilos do jogo */
+.game-layout {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.map-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.ui-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.ui-overlay > * {
+  pointer-events: auto;
+}
+
+/* Garantir que os painéis sejam visíveis */
+.top-left,
+.top-right,
+.bottom-center {
+  position: absolute;
+  z-index: 100;
+}
+
+.top-left {
+  top: 20px;
+  left: 20px;
+  max-width: 300px;
+}
+
+.top-right {
+  top: 20px;
+  right: 20px;
+  max-width: 300px;
+}
+
+.bottom-center {
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.top-left {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  max-width: 300px;
+}
+
+.top-right {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  max-width: 300px;
+}
+
+.bottom-center {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.navigation {
+  display: flex;
+  gap: 10px;
+}
+
+.nav-button {
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.nav-button:hover {
+  background: rgba(0, 0, 0, 0.9);
+  transform: translateY(-2px);
+}
+
+/* Estilos dos peões */
+.pawn-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: monospace;
+  font-weight: bold;
+}
+
+.pawn-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--c);
+  border: 3px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.pawn-label {
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  margin-top: 2px;
+}
+
+.pawn-name {
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+  font-weight: bold;
+}
+
+/* Botão de centralizar */
+.center-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  z-index: 1000;
+  transition: background 0.2s;
+}
+
+.center-button:hover {
+  background: rgba(0, 0, 0, 0.9);
+}
+
+/* Flash effect para novos territórios */
+.polygon-flash {
+  animation: flash 0.5s ease-in-out;
+}
+
+@keyframes flash {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.8; }
+}
+
+/* Regras específicas para polígonos sem rebordo */
+.polygon-no-border svg path {
+  stroke: none !important;
+  stroke-width: 0 !important;
+  stroke-opacity: 0 !important;
+}
+
+/* Garantir que as linhas de traço e paths apareçam normalmente */
+.leaflet-overlay-pane svg path:not([fill]) {
+  stroke-width: inherit !important;
+  stroke-opacity: inherit !important;
+}
+
+/* Estilos responsivos */
+@media (max-width: 768px) {
+  .top-left,
+  .top-right {
+    max-width: 250px;
+  }
+  
+  .controls {
+    font-size: 12px;
+  }
+  
+  .nav-button {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+}
+
+/* Scrollbar personalizada */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1f2937;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+
+
+

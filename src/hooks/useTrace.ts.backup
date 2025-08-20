@@ -1,0 +1,191 @@
+import { useEffect, useRef } from "react"
+import { useGameStore } from "@/store/gameStore"
+import { closeLoopToPolygon, distanceMeters, hasSelfIntersection, touchesAnyPolygon, isPointNearAnyPath, touchesAnyPolygonOrNear } from "@/lib/geo"
+import * as turf from "@turf/turf"
+
+export function useTrace() {
+  const justClosedRef = useRef(false)
+  const justClosedRefRed = useRef(false)
+  const justClosedRef2 = useRef(false)
+  const justClosedRefRed2 = useRef(false)
+
+  // Green pawn 1 (V1)
+  useEffect(() => {
+    const { isTracing, trace, pawn, addStep, polygons, paths } = useGameStore.getState()
+    if (!isTracing) return
+    if (trace.length === 0) {
+      // seed only if inside own color area or near a persisted path
+      if (paths.length > 0 && isPointNearAnyPath(pawn, paths, 3)) {
+        addStep(pawn, true)
+      } else {
+        addStep(pawn, true)
+      }
+    }
+  })
+
+  useEffect(() => {
+    const { isTracing, trace, pawn, finalizePolygon, polygons, paths } = useGameStore.getState()
+    if (!isTracing || trace.length < 2) return
+    const first = trace[0]
+    const distToStart = distanceMeters(pawn, first)
+    let shouldClose = false
+    // 1) Contact with any existing polygon boundary (preferred, with near tolerance)
+    shouldClose = touchesAnyPolygonOrNear(trace, polygons as any, 3)
+    // 2) Self-intersection of the current trace
+    if (!shouldClose) shouldClose = hasSelfIntersection(trace)
+    // 2b) Contact with any persisted path of same color
+    if (!shouldClose && paths.length > 0) {
+      const near = isPointNearAnyPath(pawn, paths, 3)
+      if (near) shouldClose = true
+    }
+    // 3) Close to the starting point
+    if (!shouldClose) shouldClose = distToStart < 5
+    if (shouldClose && !justClosedRef.current) {
+      justClosedRef.current = true
+      const points = [...trace]
+      if (distanceMeters(points[points.length - 1], points[0]) >= 0.5) {
+        points.push(points[0])
+      }
+      const polygon = closeLoopToPolygon(points)
+      if (polygon) {
+        const area = turf.area(polygon)
+        polygon.properties = { ...(polygon.properties || {}), areaM2: area }
+        finalizePolygon(polygon as any)
+      }
+      setTimeout(() => {
+        justClosedRef.current = false
+      }, 50)
+    }
+  })
+
+  // Green pawn 2 (V2)
+  useEffect(() => {
+    const { isTracing2, trace2, pawn2, addStep2, polygons, paths2 } = useGameStore.getState()
+    if (!isTracing2) return
+    if (trace2.length === 0) {
+      // seed only if inside own color area or near a persisted path
+      if (paths2.length > 0 && isPointNearAnyPath(pawn2, paths2, 3)) {
+        addStep2(pawn2, true)
+      } else {
+        addStep2(pawn2, true)
+      }
+    }
+  })
+
+  useEffect(() => {
+    const { isTracing2, trace2, pawn2, finalizePolygon2, polygons, paths2 } = useGameStore.getState()
+    if (!isTracing2 || trace2.length < 2) return
+    const first = trace2[0]
+    const distToStart = distanceMeters(pawn2, first)
+    let shouldClose = false
+    // 1) Contact with any existing polygon boundary (preferred, with near tolerance)
+    shouldClose = touchesAnyPolygonOrNear(trace2, polygons as any, 3)
+    // 2) Self-intersection of the current trace
+    if (!shouldClose) shouldClose = hasSelfIntersection(trace2)
+    // 2b) Contact with any persisted path of same color
+    if (!shouldClose && paths2.length > 0) {
+      const near = isPointNearAnyPath(pawn2, paths2, 3)
+      if (near) shouldClose = true
+    }
+    // 3) Close to the starting point
+    if (!shouldClose) shouldClose = distToStart < 5
+    if (shouldClose && !justClosedRef2.current) {
+      justClosedRef2.current = true
+      const points = [...trace2]
+      if (distanceMeters(points[points.length - 1], points[0]) >= 0.5) {
+        points.push(points[0])
+      }
+      const polygon = closeLoopToPolygon(points)
+      if (polygon) {
+        const area = turf.area(polygon)
+        polygon.properties = { ...(polygon.properties || {}), areaM2: area }
+        finalizePolygon2(polygon as any)
+      }
+      setTimeout(() => {
+        justClosedRef2.current = false
+      }, 50)
+    }
+  })
+
+  // Red pawn 1 (R1)
+  useEffect(() => {
+    const { isTracingRed, traceRed, pawnRed, addStepRed, polygonsRed, pathsRed } = useGameStore.getState()
+    if (!isTracingRed) return
+    if (traceRed.length === 0) {
+      if (pathsRed.length > 0 && isPointNearAnyPath(pawnRed, pathsRed, 3)) {
+        addStepRed(pawnRed, true)
+      } else {
+        addStepRed(pawnRed, true)
+      }
+    }
+  })
+
+  useEffect(() => {
+    const { isTracingRed, traceRed, pawnRed, finalizePolygonRed, polygonsRed, pathsRed } = useGameStore.getState()
+    if (!isTracingRed || traceRed.length < 2) return
+    const first = traceRed[0]
+    const distToStart = distanceMeters(pawnRed, first)
+    let shouldClose = distToStart < 5
+    if (!shouldClose) shouldClose = hasSelfIntersection(traceRed)
+    if (!shouldClose) shouldClose = touchesAnyPolygonOrNear(traceRed, polygonsRed as any, 3)
+    if (!shouldClose && pathsRed.length > 0) {
+      const near = isPointNearAnyPath(pawnRed, pathsRed, 3)
+      if (near) shouldClose = true
+    }
+    if (shouldClose && !justClosedRefRed.current) {
+      justClosedRefRed.current = true
+      const points = [...traceRed]
+      if (distanceMeters(points[points.length - 1], points[0]) >= 0.5) points.push(points[0])
+      const polygon = closeLoopToPolygon(points)
+      if (polygon) {
+        const area = turf.area(polygon)
+        polygon.properties = { ...(polygon.properties || {}), areaM2: area }
+        finalizePolygonRed(polygon as any)
+      }
+      setTimeout(() => {
+        justClosedRefRed.current = false
+      }, 50)
+    }
+  })
+
+  // Red pawn 2 (R2)
+  useEffect(() => {
+    const { isTracingRed2, traceRed2, pawnRed2, addStepRed2, polygonsRed, pathsRed2 } = useGameStore.getState()
+    if (!isTracingRed2) return
+    if (traceRed2.length === 0) {
+      if (pathsRed2.length > 0 && isPointNearAnyPath(pawnRed2, pathsRed2, 3)) {
+        addStepRed2(pawnRed2, true)
+      } else {
+        addStepRed2(pawnRed2, true)
+      }
+    }
+  })
+
+  useEffect(() => {
+    const { isTracingRed2, traceRed2, pawnRed2, finalizePolygonRed2, polygonsRed, pathsRed2 } = useGameStore.getState()
+    if (!isTracingRed2 || traceRed2.length < 2) return
+    const first = traceRed2[0]
+    const distToStart = distanceMeters(pawnRed2, first)
+    let shouldClose = distToStart < 5
+    if (!shouldClose) shouldClose = hasSelfIntersection(traceRed2)
+    if (!shouldClose) shouldClose = touchesAnyPolygonOrNear(traceRed2, polygonsRed as any, 3)
+    if (!shouldClose && pathsRed2.length > 0) {
+      const near = isPointNearAnyPath(pawnRed2, pathsRed2, 3)
+      if (near) shouldClose = true
+    }
+    if (shouldClose && !justClosedRefRed2.current) {
+      justClosedRefRed2.current = true
+      const points = [...traceRed2]
+      if (distanceMeters(points[points.length - 1], points[0]) >= 0.5) points.push(points[0])
+      const polygon = closeLoopToPolygon(points)
+      if (polygon) {
+        const area = turf.area(polygon)
+        polygon.properties = { ...(polygon.properties || {}), areaM2: area }
+        finalizePolygonRed2(polygon as any)
+      }
+      setTimeout(() => {
+        justClosedRefRed2.current = false
+      }, 50)
+    }
+  })
+}
