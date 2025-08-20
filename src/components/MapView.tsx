@@ -210,19 +210,13 @@ export function MapView() {
   // Usar apenas a posição do useGeo para evitar conflitos
   const currentPosition = position || defaultCenter
   
-  // Ajustar posição do marker para jogadores verdes (1 km à esquerda)
-  const basePosition = currentPosition
+  // Usar posição real do GPS sem ajustes artificiais
   const myTeam = currentPlayer?.team || onlineUsers.find(u => u.id === user?.id)?.team || 'green'
-  
-  // Se for equipe verde, mover 1 km para a esquerda
-  const adjustedPosition = myTeam === 'green' 
-    ? [basePosition[0], basePosition[1] - 0.009]
-    : basePosition
   
   // Posição do marker simplificada para performance
   const positionMemo = { 
-    lat: adjustedPosition[0], 
-    lng: adjustedPosition[1] 
+    lat: currentPosition[0], 
+    lng: currentPosition[1] 
   }
   
   // Determinar cor da equipa do jogador atual (simplificado)
@@ -255,8 +249,8 @@ export function MapView() {
   useEffect(() => {
     if (!isTracing || !position) return
 
-    // Usar a posição ajustada (visual) para o traço
-    const tracePosition: [number, number] = [adjustedPosition[0], adjustedPosition[1]]
+    // Usar a posição real do GPS para o traço
+    const tracePosition: [number, number] = [currentPosition[0], currentPosition[1]]
 
     // Verificar se a posição mudou significativamente
     if (lastPosition.current) {
@@ -347,7 +341,7 @@ export function MapView() {
         } else {
           setIsTracing(true)
           setTrace([])
-          lastPosition.current = adjustedPosition ? [adjustedPosition[0], adjustedPosition[1]] : null
+          lastPosition.current = currentPosition ? [currentPosition[0], currentPosition[1]] : null
           window.dispatchEvent(new CustomEvent('trace-state-updated', {
             detail: { isTracing: true }
           }))
