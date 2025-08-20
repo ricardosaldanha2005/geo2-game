@@ -7,7 +7,7 @@ export default defineConfig({
   resolve: {
     alias: { '@': path.resolve(__dirname, './src') },
   },
-  base: '/geo2-game/',
+  base: '/',
   build: {
     outDir: 'dist',
     sourcemap: true,
