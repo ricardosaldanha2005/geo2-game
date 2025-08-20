@@ -53,6 +53,7 @@ export function useGeo() {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const newPosition: [number, number] = [pos.coords.latitude, pos.coords.longitude]
+        console.log('📍 GPS Position:', newPosition, 'Accuracy:', pos.coords.accuracy, 'm')
         setPosition(newPosition)
         setError(null)
         updatePlayerPosition(newPosition)
@@ -72,6 +73,7 @@ export function useGeo() {
     watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => {
         const newPosition: [number, number] = [pos.coords.latitude, pos.coords.longitude]
+        console.log('📍 GPS Update:', newPosition, 'Accuracy:', pos.coords.accuracy, 'm')
         setPosition(newPosition)
         setError(null)
         updatePlayerPosition(newPosition)
