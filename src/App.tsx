@@ -1,17 +1,22 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { useTrace } from '@/hooks/useTrace'
+import { useMobile } from '@/hooks/useMobile'
 import { Login } from '@/pages/Login'
 import { MapView } from '@/components/MapView'
 import { Controls } from '@/components/Controls'
 import { Leaderboard } from '@/pages/Leaderboard'
 import { Hud } from '@/components/Hud'
+import { MobileHud } from '@/components/MobileHud'
+import { MobileControls } from '@/components/MobileControls'
+
 
 import './styles/index.css'
 import { useEffect } from 'react'
 
 function GameLayout() {
   const { user, loading } = useAuth()
+  const { isMobile } = useMobile()
   
   // Adicionar sistema de traços
   useTrace()
@@ -44,10 +49,10 @@ function GameLayout() {
       </div>
       <div className="ui-overlay">
         <div className="top-left">
-          <Controls />
+          {isMobile ? <MobileControls /> : <Controls />}
         </div>
         <div className="top-right">
-          <Hud />
+          {isMobile ? <MobileHud /> : <Hud />}
         </div>
         <div className="bottom-center">
           <div className="navigation">
@@ -56,6 +61,7 @@ function GameLayout() {
             </a>
           </div>
         </div>
+
       </div>
     </div>
   )

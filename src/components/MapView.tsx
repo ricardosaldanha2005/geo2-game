@@ -229,7 +229,7 @@ export function MapView() {
   const myTeamColor = myTeam === 'blue' ? '#2563eb' : myTeam === 'red' ? '#dc2626' : '#16a34a'
   
   // Debug: mostrar a equipe atual (removido para evitar spam)
-  // console.log('🎨 Equipe atual:', myTeam, 'User ID:', user?.id, 'CurrentPlayer:', currentPlayer?.team)
+  // console.log('🎨 Equipe atual:', myTeam, 'User ID:', user?.id, 'CurrentPlayer:', currentPlayer?.team, 'OnlineUsers:', onlineUsers.find(u => u.id === user?.id)?.team)
 
   const [mapLoaded, setMapLoaded] = useState(false)
   const [mapError, setMapError] = useState<string | null>(null)

@@ -172,11 +172,10 @@ export function useRealtime() {
         .single()
       
       if (userError) {
-        // Erro silencioso
+        console.error('❌ Erro ao buscar dados do usuário:', userError)
       }
       
       const teamId = normalizeTeam(team || userData?.team || (user as any).team)
-      console.log('🎨 Equipe final:', teamId)
       
       const { data, error } = await supabase
         .from('territories')
