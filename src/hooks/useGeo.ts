@@ -12,11 +12,9 @@ export function useGeo() {
 
   // Função para atualizar posição manualmente (para controles de teclado)
   const updatePositionManual = (newPosition: [number, number]) => {
-    // Atualização síncrona para melhor responsividade
     setPosition(newPosition)
     positionRef.current = newPosition
     
-    // Atualizar gameStore de forma assíncrona para não bloquear
     requestAnimationFrame(() => {
       updatePlayerPosition(newPosition)
     })
@@ -27,15 +25,15 @@ export function useGeo() {
     const gameMode = localStorage.getItem('gameMode')
     const isMockMode = gameMode === 'mock'
     
-         // Forçar modo mock para performance
-     if (isMockMode || true) {
+    // Se estiver em modo mock, usar posição fixa
+    if (isMockMode) {
       const initialPosition: [number, number] = [41.1333, -8.6167] // Gaia
       setPosition(initialPosition)
       positionRef.current = initialPosition
       setError(null)
       setIsTracking(true)
-      // Atualizar posição no gameStore
       updatePlayerPosition(initialPosition)
+      return
     }
 
     // Verificar se o Supabase está configurado
@@ -51,14 +49,12 @@ export function useGeo() {
 
     setIsTracking(true)
 
-    // Obter posição inicial
+    // Obter posição inicial com alta precisão
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const newPosition: [number, number] = [pos.coords.latitude, pos.coords.longitude]
         setPosition(newPosition)
         setError(null)
-        
-        // Atualizar apenas o gameStore para evitar conflitos
         updatePlayerPosition(newPosition)
       },
       (err) => {
@@ -66,29 +62,27 @@ export function useGeo() {
         setIsTracking(false)
       },
       {
-        enableHighAccuracy: false,
-        timeout: 3000,
-        maximumAge: 1000
+        enableHighAccuracy: true, // Alta precisão para iPhone
+        timeout: 10000, // Mais tempo para iPhone
+        maximumAge: 0 // Sempre obter posição atual
       }
     )
 
-    // Iniciar rastreamento contínuo
+    // Iniciar rastreamento contínuo com alta precisão
     watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => {
         const newPosition: [number, number] = [pos.coords.latitude, pos.coords.longitude]
         setPosition(newPosition)
         setError(null)
-        
-        // Atualizar apenas o gameStore para evitar conflitos
         updatePlayerPosition(newPosition)
       },
       (err) => {
         setError(`Erro GPS: ${err.message}`)
       },
       {
-        enableHighAccuracy: false,
-        timeout: 3000,
-        maximumAge: 1000
+        enableHighAccuracy: true, // Alta precisão para iPhone
+        timeout: 10000, // Mais tempo para iPhone
+        maximumAge: 0 // Sempre obter posição atual
       }
     )
 
@@ -107,10 +101,7 @@ export function useGeo() {
     }
   }, [position])
 
-    // Removida função updatePositionInSupabase para evitar conflitos
-
   const startTracking = () => {
-
     if (!navigator.geolocation) {
       setError('Geolocalização não disponível')
       return
@@ -129,9 +120,9 @@ export function useGeo() {
         setError(`Erro GPS: ${err.message}`)
       },
       {
-        enableHighAccuracy: false,
-        timeout: 3000,
-        maximumAge: 1000
+        enableHighAccuracy: true, // Alta precisão para iPhone
+        timeout: 10000, // Mais tempo para iPhone
+        maximumAge: 0 // Sempre obter posição atual
       }
     )
   }
@@ -143,8 +134,6 @@ export function useGeo() {
     }
     setIsTracking(false)
   }
-
-
 
   return {
     position,
