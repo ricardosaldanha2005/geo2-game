@@ -50,10 +50,15 @@ export function useTerritoryStats() {
        console.log('🗺️ Territórios ativos carregados:', territories.length)
       
              // Calcular áreas conquistadas (apenas territórios ativos)
+       console.log('🔍 Processando territórios ativos:', territories.length)
        territories.forEach(territory => {
          const teamKey = territory.team_id as keyof TeamStats
+         console.log('🔍 Território:', territory.id, 'equipe:', territory.team_id, 'área:', territory.area)
          if (newStats[teamKey]) {
            newStats[teamKey].conquered += territory.area || 0
+           console.log('✅ Área adicionada para equipe', teamKey, 'total atual:', newStats[teamKey].conquered)
+         } else {
+           console.log('❌ Equipe não encontrada:', teamKey)
          }
        })
 
@@ -117,6 +122,7 @@ export function useTerritoryStats() {
 
   // Atualizar estatísticas quando os territórios mudarem
   useEffect(() => {
+    console.log('🔄 Territórios mudaram, atualizando estatísticas. Count:', territories.length)
     fetchConquestHistory()
   }, [territories])
 

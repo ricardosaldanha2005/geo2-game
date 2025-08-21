@@ -38,8 +38,14 @@ export function useRealtime() {
   const [territories, setTerritories] = useState<Territory[]>([])
   const [onlineUsers, setOnlineUsers] = useState<User[]>([])
 
+  // Debug: monitorar mudanças no estado territories
+  useEffect(() => {
+    console.log('🗺️ Estado territories mudou:', territories.length, 'territórios')
+  }, [territories])
+
   useEffect(() => {
     console.log('🔄 useRealtime: Iniciando...')
+    console.log('👤 Usuário atual:', user?.id)
     // Verificar se o Supabase está configurado
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
     const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -118,21 +124,18 @@ export function useRealtime() {
          .from('territories')
          .select('*')
          .order('created_at', { ascending: false })
-         .abortSignal(new AbortController().signal) // Forçar sem cache
 
        if (error) throw error
        
        console.log('🗺️ fetchTerritories: Dados recebidos:', data?.length || 0, 'territórios')
 
-       // Comparar com o estado atual para detectar mudanças
-       const currentIds = territories.map(t => t.id).sort()
-       const newIds = (data || []).map(t => t.id).sort()
+       // Sempre atualizar os territórios para garantir que estão sincronizados
+       setTerritories(data || [])
+       console.log('✅ Territórios atualizados no estado:', data?.length || 0, 'territórios')
+       if (data && data.length > 0) {
+         console.log('📋 Primeiro território:', data[0])
+       }
        
-               if (JSON.stringify(currentIds) !== JSON.stringify(newIds)) {
-          // console.log('🔄 Mudança detectada nos territórios, atualizando...')
-          setTerritories(data || [])
-        }
-       // Removido: forçar atualização mesmo sem mudanças (causava loops infinitos)
      } catch (error) {
        console.error('❌ Erro ao buscar territórios:', error)
      }
