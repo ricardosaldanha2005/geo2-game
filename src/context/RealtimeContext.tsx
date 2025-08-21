@@ -138,18 +138,9 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
         await fetchTerritories();
         console.log('✅ Lista de territórios atualizada após expiração');
         
-        // Recalcular scores de todos os jogadores após expiração
-        console.log('🔄 Recalculando scores após expiração...');
-        const { data: allUsers, error: usersError } = await supabase
-          .from('users')
-          .select('id')
-        
-        if (!usersError && allUsers) {
-          for (const user of allUsers) {
-            await updatePlayerScore(user.id);
-          }
-          console.log('✅ Scores recalculados para todos os jogadores');
-        }
+        // NOTA: Não recalcular scores aqui para evitar duplicação
+        // Os scores serão atualizados quando necessário (ex: ao criar novo território)
+        console.log('ℹ️ Scores não recalculados automaticamente para evitar duplicação');
       } else {
         console.log('⏰ Nenhum território expirado encontrado');
       }
@@ -171,7 +162,7 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
     if (!supabase) return
 
     try {
-      // Buscar TODOS os territórios conquistados pelo jogador (ativos + perdidos + esgotados)
+      // Buscar territórios ativos do jogador
       const { data: playerTerritories, error: territoriesError } = await supabase
         .from('territories')
         .select('area')
@@ -182,7 +173,7 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
         return
       }
 
-      // Buscar também territórios perdidos/esgotados do histórico de conquistas
+      // Buscar territórios perdidos/esgotados do histórico de conquistas
       const { data: conquestHistory, error: historyError } = await supabase
         .from('conquest_history')
         .select('area_lost')
@@ -199,9 +190,15 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
       // Calcular área total perdida/esgotada
       const lostArea = conquestHistory?.reduce((sum, conquest) => sum + (conquest.area_lost || 0), 0) || 0
       
-      // Score total = área ativa + área perdida/esgotada (histórico completo)
+      // Score total = área ativa + área perdida/esgotada
       const totalArea = activeArea + lostArea
       const newScore = Math.round(totalArea * 1000) // Converter para pontos
+
+      // Debug: mostrar detalhes do cálculo
+      console.log('🔍 Debug score jogador:', playerId)
+      console.log('  - Territórios ativos:', playerTerritories?.length || 0, 'Área total:', activeArea)
+      console.log('  - Histórico conquistas:', conquestHistory?.length || 0, 'Área perdida:', lostArea)
+      console.log('  - Total calculado:', totalArea, 'Score final:', newScore)
 
       // Atualizar score do jogador
       const { error: updateError } = await supabase
