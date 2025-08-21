@@ -1,11 +1,28 @@
 import { useRealtime } from '@/hooks/useRealtime'
 import { useGeo } from '@/hooks/useGeo'
 import { useTerritoryStats } from '@/hooks/useTerritoryStats'
+import { useState, useEffect } from 'react'
 
 export function Hud() {
   const { territories, onlineUsers } = useRealtime()
   const { isTracking } = useGeo()
   const { stats } = useTerritoryStats()
+  const [gameMode, setGameMode] = useState<string>('live')
+  
+  // Carregar modo do jogo do localStorage
+  useEffect(() => {
+    const savedMode = localStorage.getItem('gameMode')
+    setGameMode(savedMode || 'live')
+  }, [])
+  
+  // Função para alternar modo
+  const toggleGameMode = () => {
+    const newMode = gameMode === 'mock' ? 'live' : 'mock'
+    setGameMode(newMode)
+    localStorage.setItem('gameMode', newMode)
+    // Recarregar a página para aplicar as mudanças
+    window.location.reload()
+  }
 
   // Debug: log das estatísticas no HUD (removido para evitar spam)
   // console.log('🏆 HUD - Estatísticas recebidas:', stats)
@@ -132,6 +149,25 @@ export function Hud() {
           <span className="text-white font-semibold">{onlineUsers.length}</span>
         </div>
         
+        {/* Botão para alternar modo */}
+        <div className="mt-3 pt-3 border-t border-gray-600">
+          <button
+            onClick={toggleGameMode}
+            className={`w-full py-2 px-3 rounded-lg text-sm font-semibold transition-colors ${
+              gameMode === 'mock' 
+                ? 'bg-orange-600 hover:bg-orange-700 text-white' 
+                : 'bg-green-600 hover:bg-green-700 text-white'
+            }`}
+          >
+            {gameMode === 'mock' ? '🎭 Modo Teste (Gaia)' : '🌍 Modo Real (GPS)'}
+          </button>
+          <p className="text-xs text-gray-400 mt-1 text-center">
+            {gameMode === 'mock' 
+              ? 'Usando posição fixa para testes' 
+              : 'Usando GPS real do dispositivo'
+            }
+          </p>
+        </div>
 
       </div>
     </div>

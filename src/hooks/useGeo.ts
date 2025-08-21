@@ -35,6 +35,9 @@ export function useGeo() {
       updatePlayerPosition(initialPosition)
       return
     }
+    
+    // Por padrão, usar GPS real (não mock)
+    console.log('🌍 Usando GPS real - Modo:', gameMode || 'live')
 
     // Verificar se o Supabase está configurado
     if (!supabase) {
