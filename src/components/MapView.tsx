@@ -174,6 +174,7 @@ export function MapView() {
   const [trace, setTrace] = useState<[number, number][]>([])
   const [paths, setPaths] = useState<[number, number][][]>([])
   const [areas, setAreas] = useState<[number, number][][]>([])
+  const [traceMessage, setTraceMessage] = useState<string>('')
   const lastPosition = useRef<[number, number] | null>(null)
   
   // Controles de teclado para movimento
@@ -301,6 +302,22 @@ export function MapView() {
           
           if (areaPoints.length >= 3) {
             const areaKm2 = calculatePolygonArea(areaPoints)
+            const areaM2 = areaKm2 * 1000000 // Converter km² para m²
+            
+            // Verificar se a área tem pelo menos 100 m²
+            if (areaM2 < 100) {
+              console.log('🎯 Área muito pequena:', areaM2.toFixed(1), 'm² (mínimo: 100 m²)')
+              setTraceMessage(`Área muito pequena: ${areaM2.toFixed(1)} m² (mínimo: 100 m²)`)
+              // Limpar mensagem após 3 segundos
+              setTimeout(() => setTraceMessage(''), 3000)
+              // Continuar traçando sem fechar a área
+              return
+            }
+            
+            console.log('🎯 Área válida:', areaM2.toFixed(1), 'm² - Fechando território')
+            setTraceMessage(`Território conquistado: ${areaM2.toFixed(1)} m²!`)
+            // Limpar mensagem após 3 segundos
+            setTimeout(() => setTraceMessage(''), 3000)
             
             // Salvar área no Supabase (assíncrono)
             if (user && addTerritory && myTeam) {
@@ -504,6 +521,26 @@ export function MapView() {
 
   return (
     <div style={{ position: 'relative', height: '100%', width: '100%' }}>
+      {/* Mensagem de feedback do traço */}
+      {traceMessage && (
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          background: 'rgba(0, 0, 0, 0.8)',
+          color: 'white',
+          padding: '10px 20px',
+          borderRadius: '8px',
+          zIndex: 1000,
+          fontSize: '14px',
+          fontWeight: 'bold',
+          textAlign: 'center'
+        }}>
+          {traceMessage}
+        </div>
+      )}
+      
       <MapContainer 
         center={defaultCenter} 
         zoom={15} 
