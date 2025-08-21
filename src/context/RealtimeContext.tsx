@@ -341,11 +341,70 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
       )
       .subscribe();
 
-    // Verificar territórios expirados a cada 5 segundos para ser mais responsivo
-    const expiredCheckInterval = setInterval(() => {
-      console.log('⏰ Intervalo de verificação executado - chamando processExpiredTerritories...');
-      processExpiredTerritories();
-    }, 5000);
+    // Verificar territórios expirados a cada 3 segundos (mais agressivo)
+    const expiredCheckInterval = setInterval(async () => {
+      console.log('⏰ INTERVALO EXECUTADO - Verificando expiração...');
+      
+      if (!supabase) {
+        console.log('❌ Supabase não disponível no intervalo');
+        return;
+      }
+
+      try {
+        // Buscar territórios ativos
+        const { data: activeTerritories, error } = await supabase
+          .from('conquest_history')
+          .select('id, created_at')
+          .eq('status', 'active');
+
+        if (error) {
+          console.error('❌ Erro ao buscar territórios:', error);
+          return;
+        }
+
+        if (!activeTerritories || activeTerritories.length === 0) {
+          console.log('⏰ Nenhum território ativo encontrado');
+          return;
+        }
+
+        console.log('⏰ Territórios ativos encontrados:', activeTerritories.length);
+
+        // Verificar quais devem expirar
+        const now = new Date();
+        const expiredIds: string[] = [];
+
+        activeTerritories.forEach(territory => {
+          const created = new Date(territory.created_at);
+          const diffMs = now.getTime() - created.getTime();
+          const diffSeconds = Math.floor(diffMs / 1000);
+          
+          console.log(`⏰ Território ${territory.id}: criado há ${diffSeconds} segundos`);
+          
+          if (diffMs >= 60000) { // 60 segundos = 1 minuto
+            expiredIds.push(territory.id);
+            console.log(`🕐 Território ${territory.id} DEVE EXPIRAR (${diffSeconds}s)`);
+          }
+        });
+
+        if (expiredIds.length > 0) {
+          console.log('🕐 EXPIRANDO territórios:', expiredIds);
+          
+          const { error: updateError } = await supabase
+            .from('conquest_history')
+            .update({ status: 'expired' })
+            .in('id', expiredIds);
+
+          if (updateError) {
+            console.error('❌ Erro ao expirar:', updateError);
+          } else {
+            console.log('✅ Territórios expirados com sucesso!');
+            await fetchTerritories();
+          }
+        }
+      } catch (err) {
+        console.error('❌ Erro no intervalo:', err);
+      }
+    }, 3000);
 
          // Cleanup subscriptions
      return () => {
