@@ -62,11 +62,19 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
 
     try {
       // Buscar apenas territórios ativos da tabela unificada
+      console.log('🔍 Buscando territórios com status = active...');
       const { data, error } = await supabase
         .from('conquest_history')
         .select('*')
         .eq('status', 'active')
         .order('created_at', { ascending: false });
+      
+      console.log('🔍 Query executada - Resultados:', data?.length || 0);
+      if (data && data.length > 0) {
+        data.forEach(territory => {
+          console.log(`🔍 Território: ${territory.id}, Status: ${territory.status}, Criado: ${territory.created_at}`);
+        });
+      }
 
       if (error) {
         console.error('❌ fetchTerritories: Erro na query:', error);
@@ -389,6 +397,13 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
         if (expiredIds.length > 0) {
           console.log('🕐 EXPIRANDO territórios:', expiredIds);
           
+          // Verificar status antes do update
+          const { data: beforeUpdate } = await supabase
+            .from('conquest_history')
+            .select('id, status')
+            .in('id', expiredIds);
+          console.log('🔍 Status ANTES do update:', beforeUpdate);
+          
           const { error: updateError } = await supabase
             .from('conquest_history')
             .update({ status: 'expired' })
@@ -398,6 +413,14 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
             console.error('❌ Erro ao expirar:', updateError);
           } else {
             console.log('✅ Territórios expirados com sucesso!');
+            
+            // Verificar status após o update
+            const { data: afterUpdate } = await supabase
+              .from('conquest_history')
+              .select('id, status')
+              .in('id', expiredIds);
+            console.log('🔍 Status APÓS o update:', afterUpdate);
+            
             await fetchTerritories();
           }
         }
