@@ -116,21 +116,27 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
 
   // Função para processar territórios expirados
   const processExpiredTerritories = async () => {
-    if (!supabase) return;
+    if (!supabase) {
+      console.log('❌ processExpiredTerritories: Supabase não disponível');
+      return;
+    }
 
     try {
       console.log('⏰ Verificando territórios expirados...');
+      console.log('⏰ Hora atual:', new Date().toISOString());
       
       // Primeiro, verificar quantos territórios temos antes
       console.log('📊 Territórios antes da verificação:', territories.length);
       
       // Buscar territórios que devem ter expirado (exatamente 1 minuto após criação)
-      const oneMinuteAgo = new Date(Date.now() - 60000).toISOString();
+      const oneMinuteAgo = new Date(Date.now() - 60000);
+      console.log('⏰ Verificando territórios criados antes de:', oneMinuteAgo.toISOString());
+      
       const { data: expiredTerritories, error: fetchError } = await supabase
         .from('conquest_history')
         .select('id, created_at')
         .eq('status', 'active')
-        .lt('created_at', oneMinuteAgo);
+        .lt('created_at', oneMinuteAgo.toISOString());
 
       if (fetchError) {
         console.error('❌ Erro ao buscar territórios expirados:', fetchError);
@@ -335,10 +341,11 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
       )
       .subscribe();
 
-    // Verificar territórios expirados a cada 10 segundos para ser mais responsivo
+    // Verificar territórios expirados a cada 5 segundos para ser mais responsivo
     const expiredCheckInterval = setInterval(() => {
+      console.log('⏰ Intervalo de verificação executado - chamando processExpiredTerritories...');
       processExpiredTerritories();
-    }, 10000);
+    }, 5000);
 
          // Cleanup subscriptions
      return () => {
