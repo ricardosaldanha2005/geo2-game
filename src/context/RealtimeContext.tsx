@@ -200,45 +200,51 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
       const now = new Date()
       const updates: Promise<any>[] = []
 
-      // Processar territórios expirados
-      allTerritories?.forEach(territory => {
-        if (territory.expires_at && territory.status === 'created') {
-          const expirationDate = new Date(territory.expires_at)
-          if (expirationDate <= now) {
-            console.log('🕐 Marcando território como expirado:', territory.id)
-            updates.push(
-              supabase
-                .from('territories')
-                .update({ status: 'expired' })
-                .eq('id', territory.id)
-            )
-          }
-        }
-      })
+             // Processar territórios expirados - DESABILITADO POR ENQUANTO
+       // TODO: Reativar quando implementar sistema de tempo de vida
+       /*
+       allTerritories?.forEach(territory => {
+         if (territory.expires_at && territory.status === 'created') {
+           const expirationDate = new Date(territory.expires_at)
+           if (expirationDate <= now) {
+             console.log('🕐 Marcando território como expirado:', territory.id)
+             updates.push(
+               supabase
+                 .from('territories')
+                 .update({ status: 'expired' })
+                 .eq('id', territory.id)
+             )
+           }
+         }
+       })
+       */
 
-      // Processar conquistas (territórios perdidos)
-      allTerritories?.forEach(territory => {
-        if (territory.status === 'created') {
-          // Verificar se há sobreposição com territórios de outras equipes
-          allTerritories?.forEach(otherTerritory => {
-            if (otherTerritory.id !== territory.id && 
-                otherTerritory.team_id !== territory.team_id &&
-                otherTerritory.status === 'created') {
-              // Aqui você pode adicionar lógica de sobreposição se necessário
-              // Por agora, vamos apenas marcar como perdido se foi criado depois
-              if (new Date(otherTerritory.created_at) > new Date(territory.created_at)) {
-                console.log('💔 Marcando território como perdido:', territory.id)
-                updates.push(
-                  supabase
-                    .from('territories')
-                    .update({ status: 'lost' })
-                    .eq('id', territory.id)
-                )
-              }
-            }
-          })
-        }
-      })
+             // Processar conquistas (territórios perdidos) - DESABILITADO POR ENQUANTO
+       // TODO: Implementar lógica de sobreposição real quando necessário
+       /*
+       allTerritories?.forEach(territory => {
+         if (territory.status === 'created') {
+           // Verificar se há sobreposição com territórios de outras equipes
+           allTerritories?.forEach(otherTerritory => {
+             if (otherTerritory.id !== territory.id && 
+                 otherTerritory.team_id !== territory.team_id &&
+                 otherTerritory.status === 'created') {
+               // Aqui você pode adicionar lógica de sobreposição se necessário
+               // Por agora, vamos apenas marcar como perdido se foi criado depois
+               if (new Date(otherTerritory.created_at) > new Date(territory.created_at)) {
+                 console.log('💔 Marcando território como perdido:', territory.id)
+                 updates.push(
+                   supabase
+                     .from('territories')
+                     .update({ status: 'lost' })
+                     .eq('id', territory.id)
+                 )
+               }
+             }
+           })
+         }
+       })
+       */
 
       // Executar todas as atualizações
       if (updates.length > 0) {
