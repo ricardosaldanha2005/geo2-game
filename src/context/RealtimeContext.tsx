@@ -294,9 +294,9 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
     const territoriesSubscription = supabase
       .channel('territories_changes')
       .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'territories' },
+        { event: '*', schema: 'public', table: 'conquest_history' },
         () => {
-          console.log('🔄 RealtimeProvider: Mudança detectada em territórios, atualizando...');
+          console.log('🔄 RealtimeProvider: Mudança detectada em conquest_history, atualizando...');
           fetchTerritories();
         }
       )
