@@ -223,6 +223,11 @@ export function MapView() {
   // Debug: mostrar posição atual
   console.log('🗺️ MapView Position:', positionMemo, 'Original:', currentPosition)
   
+  // Debug: monitorar mudanças nos territórios
+  useEffect(() => {
+    console.log('🗺️ MapView: Territórios atualizados:', territories.length, 'territórios');
+  }, [territories]);
+  
   // Determinar cor da equipa do jogador atual (simplificado)
   const myTeamColor = myTeam === 'blue' ? '#2563eb' : myTeam === 'red' ? '#dc2626' : '#16a34a'
   

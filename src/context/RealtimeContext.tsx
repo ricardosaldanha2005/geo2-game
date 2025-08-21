@@ -73,7 +73,14 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
       }
 
       console.log('🗺️ fetchTerritories: Dados recebidos:', data?.length || 0, 'territórios');
-      setTerritories(data || []);
+      
+      // Forçar atualização do estado mesmo se o número de territórios for o mesmo
+      setTerritories(prev => {
+        const newTerritories = data || [];
+        console.log('🔄 Atualizando estado de territórios:', prev.length, '→', newTerritories.length);
+        return newTerritories;
+      });
+      
       console.log('✅ Territórios atualizados no estado:', data?.length || 0, 'territórios');
       
       if (data && data.length > 0) {
@@ -112,6 +119,9 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
     try {
       console.log('⏰ Verificando territórios expirados...');
       
+      // Primeiro, verificar quantos territórios temos antes
+      console.log('📊 Territórios antes da verificação:', territories.length);
+      
       // Chamar a função do banco de dados para processar territórios expirados
       const { data, error } = await supabase
         .rpc('process_expired_territories');
@@ -124,7 +134,11 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
       if (data && data > 0) {
         console.log('🕐 Territórios expirados processados:', data);
         // Atualizar a lista de territórios após processar os expirados
+        console.log('🔄 Atualizando lista de territórios após expiração...');
         await fetchTerritories();
+        console.log('✅ Lista de territórios atualizada após expiração');
+      } else {
+        console.log('⏰ Nenhum território expirado encontrado');
       }
     } catch (err) {
       console.error('❌ Erro inesperado ao processar territórios expirados:', err);
@@ -248,10 +262,10 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
       )
       .subscribe();
 
-    // Verificar territórios expirados a cada 30 segundos
+    // Verificar territórios expirados a cada 10 segundos para ser mais responsivo
     const expiredCheckInterval = setInterval(() => {
       processExpiredTerritories();
-    }, 30000);
+    }, 10000);
 
          // Cleanup subscriptions
      return () => {
