@@ -369,12 +369,31 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
         
         console.log('🕐 Buscando territórios para DELETAR criados antes de:', oneMinuteAgo);
         
+        // Primeiro, buscar TODOS os territórios ativos para debug
+        const { data: allActive, error: allError } = await supabase
+          .from('conquest_history')
+          .select('id, created_at, status')
+          .eq('status', 'active');
+
+        console.log('🔍 TODOS os territórios ativos encontrados:', allActive?.length || 0);
+        if (allActive && allActive.length > 0) {
+          allActive.forEach(territory => {
+            const created = new Date(territory.created_at);
+            const now = new Date();
+            const diffMs = now.getTime() - created.getTime();
+            const diffSeconds = Math.floor(diffMs / 1000);
+            console.log(`🔍 Território ${territory.id}: criado há ${diffSeconds}s (${territory.created_at})`);
+          });
+        }
+
         // Buscar territórios que devem ser deletados
         const { data: toDelete, error: selectError } = await supabase
           .from('conquest_history')
           .select('id, created_at')
           .eq('status', 'active')
           .lt('created_at', oneMinuteAgo);
+
+        console.log('🔍 Territórios encontrados para deletar:', toDelete?.length || 0);
 
         if (selectError) {
           console.error('❌ Erro ao buscar territórios para deletar:', selectError);
@@ -397,7 +416,7 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
             await fetchTerritories();
           }
         } else {
-          console.log('⏰ Nenhum território para deletar');
+          console.log('⏰ Nenhum território para deletar (criteria: created_at < ' + oneMinuteAgo + ')');
         }
       } catch (err) {
         console.error('❌ Erro no intervalo:', err);
