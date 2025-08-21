@@ -124,13 +124,13 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
       // Primeiro, verificar quantos territórios temos antes
       console.log('📊 Territórios antes da verificação:', territories.length);
       
-      // Buscar territórios que devem ter expirado (mais de 1 minuto)
-      const now = new Date().toISOString();
+      // Buscar territórios que devem ter expirado (exatamente 1 minuto após criação)
+      const oneMinuteAgo = new Date(Date.now() - 60000).toISOString();
       const { data: expiredTerritories, error: fetchError } = await supabase
         .from('conquest_history')
         .select('id, created_at')
         .eq('status', 'active')
-        .lt('created_at', new Date(Date.now() - 60000).toISOString()); // 1 minuto atrás
+        .lt('created_at', oneMinuteAgo);
 
       if (fetchError) {
         console.error('❌ Erro ao buscar territórios expirados:', fetchError);
@@ -139,6 +139,7 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
 
       if (expiredTerritories && expiredTerritories.length > 0) {
         console.log('🕐 Encontrados territórios para expirar:', expiredTerritories.length);
+        console.log('🕐 IDs dos territórios:', expiredTerritories.map(t => t.id));
         
         // Marcar territórios como expirados
         const { error: updateError } = await supabase
@@ -159,6 +160,27 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
         console.log('✅ Lista de territórios atualizada após expiração');
       } else {
         console.log('⏰ Nenhum território expirado encontrado');
+        console.log('⏰ Verificando territórios ativos...');
+        
+        // Debug: mostrar territórios ativos e suas datas
+        const { data: activeTerritories } = await supabase
+          .from('conquest_history')
+          .select('id, created_at, status')
+          .eq('status', 'active')
+          .limit(5);
+        
+        if (activeTerritories && activeTerritories.length > 0) {
+          console.log('⏰ Territórios ativos encontrados:', activeTerritories.length);
+          activeTerritories.forEach(t => {
+            const created = new Date(t.created_at);
+            const now = new Date();
+            const diffMs = now.getTime() - created.getTime();
+            const diffMinutes = Math.floor(diffMs / 60000);
+            console.log(`  - ID: ${t.id}, Criado: ${diffMinutes} min atrás`);
+          });
+        } else {
+          console.log('⏰ Nenhum território ativo encontrado');
+        }
       }
     } catch (err) {
       console.error('❌ Erro inesperado ao processar territórios expirados:', err);
