@@ -608,15 +608,6 @@ export function MapView() {
 
                 {/* Territórios salvos no banco (limitados para performance) */}
         {territories
-          .filter(territory => {
-            // Filtrar territórios expirados apenas se expires_at existir
-            if (!territory.expires_at) return true
-            const expired = isTerritoryExpired(territory.expires_at)
-            if (expired) {
-              // console.log('🗑️ Filtrando território expirado:', territory.id)
-            }
-            return !expired
-          })
           .slice(0, 20)
           .map((territory, i) => {
           // Usar timeUpdate para forçar re-renderização e atualizar o tempo
