@@ -9,6 +9,7 @@ import { Leaderboard } from '@/pages/Leaderboard'
 import { Hud } from '@/components/Hud'
 import { MobileHud } from '@/components/MobileHud'
 import { MobileControls } from '@/components/MobileControls'
+import { RealtimeProvider } from '@/context/RealtimeContext'
 
 
 import './styles/index.css'
@@ -98,11 +99,13 @@ function App() {
   return (
     <Router>
       <div className="App">
-        <Routes>
-          <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
-          <Route path="/leaderboard" element={<Leaderboard />} />
-          <Route path="/" element={<GameLayout />} />
-        </Routes>
+        <RealtimeProvider>
+          <Routes>
+            <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
+            <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route path="/" element={<GameLayout />} />
+          </Routes>
+        </RealtimeProvider>
       </div>
     </Router>
   )

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useRealtime } from './useRealtime'
+import { useRealtimeContext } from '../context/RealtimeContext'
 import { supabase } from '@/lib/supabase'
 
 interface TerritoryStats {
@@ -7,6 +7,15 @@ interface TerritoryStats {
   lost: number
   expired: number
   net: number
+}
+
+interface Territory {
+  id: string;
+  team_id: string;
+  player_id: string;
+  polygon: any;
+  area: number;
+  created_at: string;
 }
 
 interface TeamStats {
@@ -20,7 +29,7 @@ interface TeamStats {
 
 
 export function useTerritoryStats() {
-  const { territories } = useRealtime()
+  const { territories } = useRealtimeContext()
   const [stats, setStats] = useState<TeamStats>({
     green: { conquered: 0, lost: 0, expired: 0, net: 0 },
     blue: { conquered: 0, lost: 0, expired: 0, net: 0 },

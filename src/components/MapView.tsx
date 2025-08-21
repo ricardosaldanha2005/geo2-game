@@ -3,7 +3,7 @@ import L from 'leaflet'
 import { useEffect, useMemo, useState, useRef } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useGeo } from '@/hooks/useGeo'
-import { useRealtime } from '@/hooks/useRealtime'
+import { useRealtimeContext } from '@/context/RealtimeContext'
 import { useGameStore } from '@/store/gameStore'
 import { useKeyboardControls } from '@/hooks/useKeyboardControls'
 import { useTerritoryStats } from '@/hooks/useTerritoryStats'
@@ -165,7 +165,7 @@ function CenterOnPawnButton() {
 export function MapView() {
   const { user } = useAuth()
   const { position, updatePosition } = useGeo()
-  const { onlineUsers, territories, addTerritory, fetchTerritories, fetchOnlineUsers } = useRealtime()
+  const { onlineUsers, territories, addTerritory } = useRealtimeContext()
   const { currentPlayer, initializeCurrentPlayer } = useGameStore()
 
   
