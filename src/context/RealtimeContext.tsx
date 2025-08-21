@@ -293,10 +293,8 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
       // Atualizar score do jogador baseado nas suas conquistas totais
       await updatePlayerScore(user.id)
 
-      // Refresh territórios após adicionar
-      setTimeout(async () => {
-        await fetchTerritories()
-      }, 1000)
+      // Refresh territórios imediatamente (sem delay)
+      await fetchTerritories()
 
       return data
     } catch (error) {
@@ -326,13 +324,20 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
     
     setLoading(false);
 
-    // Set up real-time subscriptions
+    // Set up real-time subscriptions para conquest_history
     const territoriesSubscription = supabase
-      .channel('territories_changes')
+      .channel('conquest_history_changes')
       .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'conquest_history' },
-        () => {
-          console.log('🔄 RealtimeProvider: Mudança detectada em conquest_history, atualizando...');
+        { event: 'INSERT', schema: 'public', table: 'conquest_history' },
+        (payload) => {
+          console.log('🔄 RealtimeProvider: NOVO território detectado!', payload.new);
+          fetchTerritories();
+        }
+      )
+      .on('postgres_changes', 
+        { event: 'UPDATE', schema: 'public', table: 'conquest_history' },
+        (payload) => {
+          console.log('🔄 RealtimeProvider: Território ATUALIZADO!', payload.new);
           fetchTerritories();
         }
       )
@@ -349,7 +354,7 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
       )
       .subscribe();
 
-    // Verificar territórios expirados a cada 3 segundos (mais agressivo)
+    // Verificar territórios expirados a cada 2 segundos (mais responsivo)
     const expiredCheckInterval = setInterval(async () => {
       console.log('⏰ INTERVALO EXECUTADO - Verificando expiração...');
       
@@ -359,75 +364,45 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
       }
 
       try {
-        // Buscar territórios ativos
-        const { data: activeTerritories, error } = await supabase
+        // DELETAR territórios expirados diretamente (mais eficiente)
+        const oneMinuteAgo = new Date(Date.now() - 60000).toISOString();
+        
+        console.log('🕐 Buscando territórios para DELETAR criados antes de:', oneMinuteAgo);
+        
+        // Buscar territórios que devem ser deletados
+        const { data: toDelete, error: selectError } = await supabase
           .from('conquest_history')
           .select('id, created_at')
-          .eq('status', 'active');
+          .eq('status', 'active')
+          .lt('created_at', oneMinuteAgo);
 
-        if (error) {
-          console.error('❌ Erro ao buscar territórios:', error);
+        if (selectError) {
+          console.error('❌ Erro ao buscar territórios para deletar:', selectError);
           return;
         }
 
-        if (!activeTerritories || activeTerritories.length === 0) {
-          console.log('⏰ Nenhum território ativo encontrado');
-          return;
-        }
-
-        console.log('⏰ Territórios ativos encontrados:', activeTerritories.length);
-
-        // Verificar quais devem expirar
-        const now = new Date();
-        const expiredIds: string[] = [];
-
-        activeTerritories.forEach(territory => {
-          const created = new Date(territory.created_at);
-          const diffMs = now.getTime() - created.getTime();
-          const diffSeconds = Math.floor(diffMs / 1000);
+        if (toDelete && toDelete.length > 0) {
+          console.log('🗑️ DELETANDO territórios expirados:', toDelete.map(t => t.id));
           
-          console.log(`⏰ Território ${territory.id}: criado há ${diffSeconds} segundos`);
-          
-          if (diffMs >= 60000) { // 60 segundos = 1 minuto
-            expiredIds.push(territory.id);
-            console.log(`🕐 Território ${territory.id} DEVE EXPIRAR (${diffSeconds}s)`);
-          }
-        });
-
-        if (expiredIds.length > 0) {
-          console.log('🕐 EXPIRANDO territórios:', expiredIds);
-          
-          // Verificar status antes do update
-          const { data: beforeUpdate } = await supabase
+          // DELETAR territórios expirados
+          const { error: deleteError } = await supabase
             .from('conquest_history')
-            .select('id, status')
-            .in('id', expiredIds);
-          console.log('🔍 Status ANTES do update:', beforeUpdate);
-          
-          const { error: updateError } = await supabase
-            .from('conquest_history')
-            .update({ status: 'expired' })
-            .in('id', expiredIds);
+            .delete()
+            .in('id', toDelete.map(t => t.id));
 
-          if (updateError) {
-            console.error('❌ Erro ao expirar:', updateError);
+          if (deleteError) {
+            console.error('❌ Erro ao deletar territórios:', deleteError);
           } else {
-            console.log('✅ Territórios expirados com sucesso!');
-            
-            // Verificar status após o update
-            const { data: afterUpdate } = await supabase
-              .from('conquest_history')
-              .select('id, status')
-              .in('id', expiredIds);
-            console.log('🔍 Status APÓS o update:', afterUpdate);
-            
+            console.log('✅ Territórios DELETADOS com sucesso!');
             await fetchTerritories();
           }
+        } else {
+          console.log('⏰ Nenhum território para deletar');
         }
       } catch (err) {
         console.error('❌ Erro no intervalo:', err);
       }
-    }, 3000);
+    }, 2000);
 
          // Cleanup subscriptions
      return () => {
