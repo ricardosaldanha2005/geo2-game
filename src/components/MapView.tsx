@@ -250,6 +250,7 @@ export function MapView() {
 
   // Adicionar posição ao traço quando estiver rastreando
   useEffect(() => {
+    console.log('🎯 Trace Debug:', { isTracing, hasPosition: !!position, position })
     if (!isTracing || !position) return
 
     // Usar a posição real do GPS para o traço
@@ -273,6 +274,7 @@ export function MapView() {
     const newTrace = [...trace, tracePosition]
     setTrace(newTrace)
     lastPosition.current = tracePosition
+    console.log('🎯 Added to trace:', tracePosition, 'Trace length:', newTrace.length)
 
     // Verificar se o traço se cruza consigo mesmo
     if (newTrace.length >= 4) {
@@ -327,7 +329,7 @@ export function MapView() {
     }
   }, [position, isTracing, user, addTerritory, myTeam])
 
-  // Controles de teclado para traço
+  // Controles de teclado e eventos para traço
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === ' ' || event.key === 'Enter') {
@@ -352,9 +354,39 @@ export function MapView() {
       }
     }
 
+    // Escutar eventos de start/stop trace dos controles
+    const handleStartTrace = () => {
+      console.log('🎯 MapView: Received start-trace event')
+      setIsTracing(true)
+      setTrace([])
+      lastPosition.current = currentPosition ? [currentPosition[0], currentPosition[1]] : null
+      window.dispatchEvent(new CustomEvent('trace-state-updated', {
+        detail: { isTracing: true }
+      }))
+    }
+
+    const handleStopTrace = () => {
+      console.log('🎯 MapView: Received stop-trace event')
+      setIsTracing(false)
+      if (trace.length > 1) {
+        setPaths(prev => [...prev, trace])
+      }
+      setTrace([])
+      window.dispatchEvent(new CustomEvent('trace-state-updated', {
+        detail: { isTracing: false }
+      }))
+    }
+
     window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isTracing, trace, position])
+    window.addEventListener('start-trace', handleStartTrace)
+    window.addEventListener('stop-trace', handleStopTrace)
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('start-trace', handleStartTrace)
+      window.removeEventListener('stop-trace', handleStopTrace)
+    }
+  }, [isTracing, trace, position, currentPosition])
 
   // Inicializar currentPlayer quando o usuário estiver disponível
   useEffect(() => {

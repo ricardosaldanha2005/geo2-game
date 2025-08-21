@@ -47,6 +47,7 @@ export function MobileControls() {
   }, [])
 
   const handleStartTrace = () => {
+    console.log('🎯 Mobile: Starting trace')
     setIsTracing(true)
     window.dispatchEvent(new CustomEvent('start-trace'))
   }
