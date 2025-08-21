@@ -250,7 +250,13 @@ export function MapView() {
 
   // Adicionar posição ao traço quando estiver rastreando
   useEffect(() => {
-    console.log('🎯 Trace Debug:', { isTracing, hasPosition: !!position, position })
+    console.log('🎯 Trace Debug:', { 
+      isTracing, 
+      hasPosition: !!position, 
+      position,
+      traceLength: trace.length,
+      lastPosition: lastPosition.current
+    })
     if (!isTracing || !position) return
 
     // Usar a posição real do GPS para o traço
@@ -264,8 +270,9 @@ export function MapView() {
       const latDiff = Math.abs(currentLat - lastLat)
       const lngDiff = Math.abs(currentLng - lastLng)
       
-      // Aproximadamente 1 metro (0.00001 graus)
-      if (latDiff < 0.00001 && lngDiff < 0.00001) {
+      // Aproximadamente 0.5 metros (0.000005 graus) - mais sensível para iPhone
+      if (latDiff < 0.000005 && lngDiff < 0.000005) {
+        console.log('🎯 Position too close, skipping:', { latDiff, lngDiff })
         return // Posição não mudou o suficiente
       }
     }
@@ -516,11 +523,14 @@ export function MapView() {
 
         {/* Linha de traço atual */}
         {trace.length > 0 && (
-          <Polyline 
-            positions={trace.map(([lat, lng]) => ({ lat, lng }))} 
-            color={myTeamColor} 
-            pathOptions={{ weight: 6, zIndex: 1000 }} 
-          />
+          <>
+            {console.log('🎯 Rendering trace with', trace.length, 'points:', trace)}
+            <Polyline 
+              positions={trace.map(([lat, lng]) => ({ lat, lng }))} 
+              color={myTeamColor} 
+              pathOptions={{ weight: 6, zIndex: 1000 }} 
+            />
+          </>
         )}
         
         {/* Paths persistentes */}
