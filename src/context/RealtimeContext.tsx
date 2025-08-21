@@ -137,6 +137,19 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
         console.log('🔄 Atualizando lista de territórios após expiração...');
         await fetchTerritories();
         console.log('✅ Lista de territórios atualizada após expiração');
+        
+        // Recalcular scores de todos os jogadores após expiração
+        console.log('🔄 Recalculando scores após expiração...');
+        const { data: allUsers, error: usersError } = await supabase
+          .from('users')
+          .select('id')
+        
+        if (!usersError && allUsers) {
+          for (const user of allUsers) {
+            await updatePlayerScore(user.id);
+          }
+          console.log('✅ Scores recalculados para todos os jogadores');
+        }
       } else {
         console.log('⏰ Nenhum território expirado encontrado');
       }
@@ -151,6 +164,44 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
     if (t === 'blue') return 'blue'
     if (t === 'green') return 'green'
     return 'green'
+  }
+
+  // Função para atualizar score do jogador baseado nas suas conquistas
+  const updatePlayerScore = async (playerId: string) => {
+    if (!supabase) return
+
+    try {
+      // Buscar todos os territórios ativos conquistados pelo jogador
+      const { data: playerTerritories, error: territoriesError } = await supabase
+        .from('territories')
+        .select('area')
+        .eq('player_id', playerId)
+        .gt('expires_at', new Date().toISOString())
+
+      if (territoriesError) {
+        console.error('❌ Erro ao buscar territórios do jogador:', territoriesError)
+        return
+      }
+
+      // Calcular score total baseado na área dos territórios ativos
+      const totalArea = playerTerritories?.reduce((sum, territory) => sum + (territory.area || 0), 0) || 0
+      const newScore = Math.round(totalArea * 1000) // Converter para pontos
+
+      // Atualizar score do jogador
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({ score: newScore })
+        .eq('id', playerId)
+
+      if (updateError) {
+        console.error('❌ Erro ao atualizar score do jogador:', updateError)
+        return
+      }
+
+      console.log('📈 Score do jogador atualizado:', playerId, 'Score:', newScore, 'Área total:', totalArea)
+    } catch (err) {
+      console.error('❌ Erro inesperado ao atualizar score do jogador:', err)
+    }
   }
 
   const addTerritory = async (polygon: any, area: number, team?: string) => {
@@ -188,23 +239,13 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
 
       console.log('✅ Território criado com ID:', data.id)
 
-      // Buscar score atual do usuário e incrementar
-      const { data: me, error: meErr } = await supabase
-        .from('users')
-        .select('score')
-        .eq('id', user.id)
-        .single()
-      if (meErr) throw meErr
-      // Converter área para inteiro (multiplicar por 1000 para manter precisão)
-      const areaPoints = Math.round(area * 1000)
-      const newScore = (me?.score || 0) + areaPoints
-      const { error: scoreError } = await supabase
-        .from('users')
-        .update({ score: newScore })
-        .eq('id', user.id)
-      if (scoreError) throw scoreError
+      // Atualizar score do jogador baseado nas suas conquistas totais
+      await updatePlayerScore(user.id)
 
-             console.log('📈 Score atualizado para:', newScore)
+       // Refresh territórios após adicionar
+       setTimeout(async () => {
+         await fetchTerritories()
+       }, 1000)
 
        // Refresh territórios após adicionar
        setTimeout(async () => {
