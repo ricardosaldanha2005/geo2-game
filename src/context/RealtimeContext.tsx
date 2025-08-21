@@ -404,15 +404,31 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
           console.log('🗑️ DELETANDO territórios expirados:', toDelete.map(t => t.id));
           
           // DELETAR territórios expirados
-          const { error: deleteError } = await supabase
+          console.log('🗑️ EXECUTANDO DELETE para IDs:', toDelete.map(t => t.id));
+          const { data: deletedData, error: deleteError } = await supabase
             .from('conquest_history')
             .delete()
-            .in('id', toDelete.map(t => t.id));
+            .in('id', toDelete.map(t => t.id))
+            .select(); // Retorna os registos deletados
 
           if (deleteError) {
-            console.error('❌ Erro ao deletar territórios:', deleteError);
+            console.error('❌ ERRO AO DELETAR:', deleteError);
+            console.error('❌ Detalhes do erro:', JSON.stringify(deleteError, null, 2));
           } else {
-            console.log('✅ Territórios DELETADOS com sucesso!');
+            console.log('✅ Territórios DELETADOS:', deletedData?.length || 0);
+            console.log('✅ IDs deletados:', deletedData?.map(d => d.id) || []);
+            
+            // Verificar se realmente foram deletados
+            const { data: checkDeleted } = await supabase
+              .from('conquest_history')
+              .select('id')
+              .in('id', toDelete.map(t => t.id));
+            
+            console.log('🔍 Verificação pós-delete - Territórios ainda existem:', checkDeleted?.length || 0);
+            if (checkDeleted && checkDeleted.length > 0) {
+              console.error('❌ TERRITÓRIOS NÃO FORAM DELETADOS! IDs:', checkDeleted.map(c => c.id));
+            }
+            
             await fetchTerritories();
           }
         } else {
