@@ -105,6 +105,32 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
     }
   };
 
+  // Função para processar territórios expirados
+  const processExpiredTerritories = async () => {
+    if (!supabase) return;
+
+    try {
+      console.log('⏰ Verificando territórios expirados...');
+      
+      // Chamar a função do banco de dados para processar territórios expirados
+      const { data, error } = await supabase
+        .rpc('process_expired_territories');
+
+      if (error) {
+        console.error('❌ Erro ao processar territórios expirados:', error);
+        return;
+      }
+
+      if (data && data > 0) {
+        console.log('🕐 Territórios expirados processados:', data);
+        // Atualizar a lista de territórios após processar os expirados
+        await fetchTerritories();
+      }
+    } catch (err) {
+      console.error('❌ Erro inesperado ao processar territórios expirados:', err);
+    }
+  };
+
   const normalizeTeam = (team?: string): 'green' | 'blue' | 'red' => {
     const t = (team || '').toString().toLowerCase().trim()
     if (t === 'red') return 'red'
@@ -193,6 +219,10 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
     console.log('🔄 RealtimeProvider: Chamando fetchTerritories inicial...');
     fetchTerritories();
     fetchOnlineUsers();
+    
+    // Verificar territórios expirados na inicialização
+    processExpiredTerritories();
+    
     setLoading(false);
 
     // Set up real-time subscriptions
@@ -218,10 +248,16 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
       )
       .subscribe();
 
+    // Verificar territórios expirados a cada 30 segundos
+    const expiredCheckInterval = setInterval(() => {
+      processExpiredTerritories();
+    }, 30000);
+
          // Cleanup subscriptions
      return () => {
        territoriesSubscription.unsubscribe();
        onlineUsersSubscription.unsubscribe();
+       clearInterval(expiredCheckInterval);
      };
   }, [user]);
 
