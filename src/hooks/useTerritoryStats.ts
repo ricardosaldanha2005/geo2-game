@@ -38,7 +38,7 @@ export function useTerritoryStats() {
 
       if (error) throw error
 
-             // console.log('📋 Histórico de conquistas carregado:', conquestData?.length || 0, 'registros')
+             console.log('📋 Histórico de conquistas carregado:', conquestData?.length || 0, 'registros')
 
        const newStats: TeamStats = {
          green: { conquered: 0, lost: 0, expired: 0, net: 0 },
@@ -47,7 +47,7 @@ export function useTerritoryStats() {
        }
 
        // Calcular áreas conquistadas (apenas do histórico para evitar duplicação)
-       // console.log('🗺️ Territórios ativos carregados:', territories.length)
+       console.log('🗺️ Territórios ativos carregados:', territories.length)
       
              // Calcular áreas conquistadas (apenas territórios ativos)
        territories.forEach(territory => {
@@ -62,37 +62,39 @@ export function useTerritoryStats() {
       let lostCount = 0
       
       conquestData?.forEach(conquest => {
+        console.log('🔍 Processando conquista:', conquest)
         const conqueredTeam = conquest.conquered_team as keyof TeamStats
+        console.log('🔍 Equipe conquistada:', conqueredTeam, 'Tipo:', typeof conqueredTeam)
         if (newStats[conqueredTeam]) {
                      if (conquest.conquering_team === 'expired') {
              // Área esgotada
              newStats[conqueredTeam].expired += conquest.area_lost || 0
              expiredCount++
-             // console.log('🕐 Área esgotada encontrada:', conquest.area_lost, 'para equipe:', conqueredTeam)
+             console.log('🕐 Área esgotada encontrada:', conquest.area_lost, 'para equipe:', conqueredTeam)
            } else {
              // Área perdida por conquista
              newStats[conqueredTeam].lost += conquest.area_lost || 0
              lostCount++
-             // console.log('💔 Área perdida encontrada:', conquest.area_lost, 'para equipe:', conqueredTeam)
+             console.log('💔 Área perdida encontrada:', conquest.area_lost, 'para equipe:', conqueredTeam)
            }
         }
       })
 
-             // console.log('📊 Processados:', expiredCount, 'áreas esgotadas e', lostCount, 'áreas perdidas')
+             console.log('📊 Processados:', expiredCount, 'áreas esgotadas e', lostCount, 'áreas perdidas')
 
        // Debug: log das áreas conquistadas por equipe
-       // console.log('🏆 Áreas conquistadas por equipe:', {
-       //   green: newStats.green.conquered,
-       //   blue: newStats.blue.conquered,
-       //   red: newStats.red.conquered
-       // })
+       console.log('🏆 Áreas conquistadas por equipe:', {
+         green: newStats.green.conquered,
+         blue: newStats.blue.conquered,
+         red: newStats.red.conquered
+       })
 
        // Debug: log das áreas esgotadas por equipe
-       // console.log('🕐 Áreas esgotadas por equipe:', {
-       //   green: newStats.green.expired,
-       //   blue: newStats.blue.expired,
-       //   red: newStats.red.expired
-       // })
+       console.log('🕐 Áreas esgotadas por equipe:', {
+         green: newStats.green.expired,
+         blue: newStats.blue.expired,
+         red: newStats.red.expired
+       })
 
       // Calcular saldo (conquistado - perdido - esgotado)
       Object.keys(newStats).forEach(team => {
@@ -101,11 +103,11 @@ export function useTerritoryStats() {
       })
 
              // Debug: log das estatísticas
-       // console.log('📊 Estatísticas atualizadas:', {
-       //   green: newStats.green,
-       //   blue: newStats.blue,
-       //   red: newStats.red
-       // })
+       console.log('📊 Estatísticas atualizadas:', {
+         green: newStats.green,
+         blue: newStats.blue,
+         red: newStats.red
+       })
 
       setStats(newStats)
     } catch (error) {
