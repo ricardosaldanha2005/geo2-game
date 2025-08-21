@@ -12,7 +12,6 @@ interface Territory {
   expires_at?: string;
   conquered_at?: string;
   lifetime_seconds?: number;
-  status?: 'created' | 'expired' | 'lost';
 }
 
 interface OnlineUser {
@@ -29,7 +28,6 @@ interface RealtimeContextType {
   loading: boolean;
   error: string | null;
   addTerritory: (polygon: any, area: number, team?: string) => Promise<any>;
-  processTerritoryStatus: () => Promise<void>;
 }
 
 const RealtimeContext = createContext<RealtimeContextType | undefined>(undefined);
@@ -134,18 +132,17 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
       
       const teamId = normalizeTeam(team || userData?.team || (user as any).team)
       
-      const { data, error } = await supabase
-        .from('territories')
-        .insert({
-          team_id: teamId,
-          player_id: user.id,
-          polygon,
-          area,
-          conquered_at: new Date().toISOString(),
-          status: 'created'
-        })
-        .select()
-        .single()
+             const { data, error } = await supabase
+         .from('territories')
+         .insert({
+           team_id: teamId,
+           player_id: user.id,
+           polygon,
+           area,
+           conquered_at: new Date().toISOString()
+         })
+         .select()
+         .single()
 
       if (error) throw error
 
@@ -167,15 +164,12 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
         .eq('id', user.id)
       if (scoreError) throw scoreError
 
-      console.log('📈 Score atualizado para:', newScore)
+             console.log('📈 Score atualizado para:', newScore)
 
-      // Processar conquistas e expirações
-      await processTerritoryStatus()
-
-      // Refresh territórios após adicionar
-      setTimeout(async () => {
-        await fetchTerritories()
-      }, 1000)
+       // Refresh territórios após adicionar
+       setTimeout(async () => {
+         await fetchTerritories()
+       }, 1000)
 
       return data
     } catch (error) {
@@ -184,78 +178,7 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
     }
   }
 
-  const processTerritoryStatus = async () => {
-    if (!supabase) return
 
-    try {
-      console.log('🔄 Processando status dos territórios...')
-      
-      // Buscar todos os territórios
-      const { data: allTerritories, error } = await supabase
-        .from('territories')
-        .select('*')
-
-      if (error) throw error
-
-      const now = new Date()
-      const updates: Promise<any>[] = []
-
-             // Processar territórios expirados - DESABILITADO POR ENQUANTO
-       // TODO: Reativar quando implementar sistema de tempo de vida
-       /*
-       allTerritories?.forEach(territory => {
-         if (territory.expires_at && territory.status === 'created') {
-           const expirationDate = new Date(territory.expires_at)
-           if (expirationDate <= now) {
-             console.log('🕐 Marcando território como expirado:', territory.id)
-             updates.push(
-               supabase
-                 .from('territories')
-                 .update({ status: 'expired' })
-                 .eq('id', territory.id)
-             )
-           }
-         }
-       })
-       */
-
-             // Processar conquistas (territórios perdidos) - DESABILITADO POR ENQUANTO
-       // TODO: Implementar lógica de sobreposição real quando necessário
-       /*
-       allTerritories?.forEach(territory => {
-         if (territory.status === 'created') {
-           // Verificar se há sobreposição com territórios de outras equipes
-           allTerritories?.forEach(otherTerritory => {
-             if (otherTerritory.id !== territory.id && 
-                 otherTerritory.team_id !== territory.team_id &&
-                 otherTerritory.status === 'created') {
-               // Aqui você pode adicionar lógica de sobreposição se necessário
-               // Por agora, vamos apenas marcar como perdido se foi criado depois
-               if (new Date(otherTerritory.created_at) > new Date(territory.created_at)) {
-                 console.log('💔 Marcando território como perdido:', territory.id)
-                 updates.push(
-                   supabase
-                     .from('territories')
-                     .update({ status: 'lost' })
-                     .eq('id', territory.id)
-                 )
-               }
-             }
-           })
-         }
-       })
-       */
-
-      // Executar todas as atualizações
-      if (updates.length > 0) {
-        await Promise.all(updates)
-        console.log('✅ Status dos territórios atualizados:', updates.length, 'atualizações')
-      }
-
-    } catch (error) {
-      console.error('❌ Erro ao processar status dos territórios:', error)
-    }
-  }
 
   useEffect(() => {
     console.log('👤 Usuário atual:', user?.id);
@@ -295,17 +218,11 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
       )
       .subscribe();
 
-    // Processar status dos territórios periodicamente
-    const statusInterval = setInterval(() => {
-      processTerritoryStatus();
-    }, 10000); // A cada 10 segundos
-
-    // Cleanup subscriptions
-    return () => {
-      territoriesSubscription.unsubscribe();
-      onlineUsersSubscription.unsubscribe();
-      clearInterval(statusInterval);
-    };
+         // Cleanup subscriptions
+     return () => {
+       territoriesSubscription.unsubscribe();
+       onlineUsersSubscription.unsubscribe();
+     };
   }, [user]);
 
   // Log when territories state changes
@@ -318,8 +235,7 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
     onlineUsers,
     loading,
     error,
-    addTerritory,
-    processTerritoryStatus
+    addTerritory
   };
 
   return (
