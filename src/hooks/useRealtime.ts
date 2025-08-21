@@ -46,6 +46,8 @@ export function useRealtime() {
   useEffect(() => {
     console.log('🔄 useRealtime: Iniciando...')
     console.log('👤 Usuário atual:', user?.id)
+    console.log('🔧 useRealtime: Hook executado, user existe:', !!user)
+    
     // Verificar se o Supabase está configurado
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
     const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -68,14 +70,19 @@ export function useRealtime() {
       return
     }
 
-    if (!user) return
+    if (!user) {
+      console.log('❌ useRealtime: Usuário não autenticado, saindo...')
+      return
+    }
 
     // Buscar dados iniciais imediatamente
+    console.log('🔄 useRealtime: Chamando fetchTerritories inicial...')
     fetchTerritories()
     fetchOnlineUsers()
     
     // Forçar busca inicial após um pequeno delay para garantir que o usuário foi criado
     setTimeout(() => {
+      console.log('🔄 useRealtime: Chamando fetchTerritories com delay...')
       fetchOnlineUsers()
       fetchTerritories()
     }, 1000)
@@ -116,7 +123,11 @@ export function useRealtime() {
   }, [user])
 
      const fetchTerritories = async () => {
-     if (!supabase) return
+     console.log('🗺️ fetchTerritories: Função chamada')
+     if (!supabase) {
+       console.log('❌ fetchTerritories: Supabase não disponível')
+       return
+     }
      
      console.log('🗺️ fetchTerritories: Iniciando busca...')
      try {
@@ -125,7 +136,10 @@ export function useRealtime() {
          .select('*')
          .order('created_at', { ascending: false })
 
-       if (error) throw error
+       if (error) {
+         console.error('❌ fetchTerritories: Erro na query:', error)
+         throw error
+       }
        
        console.log('🗺️ fetchTerritories: Dados recebidos:', data?.length || 0, 'territórios')
 

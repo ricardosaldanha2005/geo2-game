@@ -6,9 +6,18 @@ export function useAuth() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
+  // Debug: monitorar mudanças no estado user
   useEffect(() => {
+    console.log('🔐 useAuth: Estado user mudou:', !!user, 'ID:', user?.id)
+  }, [user])
+
+  useEffect(() => {
+    console.log('🔐 useAuth: Iniciando...')
+    console.log('🔐 useAuth: Supabase disponível:', !!supabase)
+    
     // Verificar se o Supabase está configurado
     if (!supabase) {
+      console.log('🔐 useAuth: Criando usuário mock...')
       // Criar usuário mock para funcionar offline
       const mockUser = {
         id: 'mock-user',
@@ -25,6 +34,7 @@ export function useAuth() {
 
     // Obter sessão atual
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('🔐 useAuth: Sessão obtida:', !!session?.user, 'user ID:', session?.user?.id)
       setUser(session?.user ?? null)
       setLoading(false)
     })
@@ -32,6 +42,7 @@ export function useAuth() {
     // Escutar mudanças de autenticação
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('🔐 useAuth: Mudança de estado:', event, 'user ID:', session?.user?.id)
         setUser(session?.user ?? null)
         setLoading(false)
       }
