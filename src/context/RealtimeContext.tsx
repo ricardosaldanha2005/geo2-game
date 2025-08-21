@@ -6,12 +6,12 @@ interface Territory {
   id: string;
   team_id: string;
   player_id: string;
-  polygon: any;
-  area: number;
+  polygon_coords: any; // Mudou para polygon_coords para compatibilidade com a migração
+  area_lost: number; // Mudou de 'area' para 'area_lost' para manter compatibilidade
   created_at: string;
-  expires_at?: string;
-  conquered_at?: string;
-  lifetime_seconds?: number;
+  status: 'active' | 'expired' | 'lost' | 'conquered';
+  conquering_team: string;
+  conquered_team: string;
 }
 
 interface OnlineUser {
@@ -61,9 +61,11 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
     }
 
     try {
+      // Buscar apenas territórios ativos da tabela unificada
       const { data, error } = await supabase
-        .from('territories')
+        .from('conquest_history')
         .select('*')
+        .eq('status', 'active')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -72,7 +74,7 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
         return;
       }
 
-      console.log('🗺️ fetchTerritories: Dados recebidos:', data?.length || 0, 'territórios');
+      console.log('🗺️ fetchTerritories: Dados recebidos:', data?.length || 0, 'territórios ativos');
       
       // Forçar atualização do estado mesmo se o número de territórios for o mesmo
       setTerritories(prev => {
@@ -122,25 +124,39 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
       // Primeiro, verificar quantos territórios temos antes
       console.log('📊 Territórios antes da verificação:', territories.length);
       
-      // Chamar a função do banco de dados para processar territórios expirados
-      const { data, error } = await supabase
-        .rpc('process_expired_territories');
+      // Buscar territórios que devem ter expirado (mais de 1 minuto)
+      const now = new Date().toISOString();
+      const { data: expiredTerritories, error: fetchError } = await supabase
+        .from('conquest_history')
+        .select('id, created_at')
+        .eq('status', 'active')
+        .lt('created_at', new Date(Date.now() - 60000).toISOString()); // 1 minuto atrás
 
-      if (error) {
-        console.error('❌ Erro ao processar territórios expirados:', error);
+      if (fetchError) {
+        console.error('❌ Erro ao buscar territórios expirados:', fetchError);
         return;
       }
 
-      if (data && data > 0) {
-        console.log('🕐 Territórios expirados processados:', data);
-        // Atualizar a lista de territórios após processar os expirados
+      if (expiredTerritories && expiredTerritories.length > 0) {
+        console.log('🕐 Encontrados territórios para expirar:', expiredTerritories.length);
+        
+        // Marcar territórios como expirados
+        const { error: updateError } = await supabase
+          .from('conquest_history')
+          .update({ status: 'expired' })
+          .in('id', expiredTerritories.map(t => t.id));
+
+        if (updateError) {
+          console.error('❌ Erro ao marcar territórios como expirados:', updateError);
+          return;
+        }
+
+        console.log('🕐 Territórios marcados como expirados:', expiredTerritories.length);
+        
+        // Atualizar a lista de territórios
         console.log('🔄 Atualizando lista de territórios após expiração...');
         await fetchTerritories();
         console.log('✅ Lista de territórios atualizada após expiração');
-        
-        // NOTA: Não recalcular scores aqui para evitar duplicação
-        // Os scores serão atualizados quando necessário (ex: ao criar novo território)
-        console.log('ℹ️ Scores não recalculados automaticamente para evitar duplicação');
       } else {
         console.log('⏰ Nenhum território expirado encontrado');
       }
@@ -157,15 +173,15 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
     return 'green'
   }
 
-  // Função para atualizar score do jogador baseado nas suas conquistas totais
+  // Função para atualizar score do jogador baseado na tabela unificada
   const updatePlayerScore = async (playerId: string) => {
     if (!supabase) return
 
     try {
-      // Buscar territórios ativos do jogador
-      const { data: playerTerritories, error: territoriesError } = await supabase
-        .from('territories')
-        .select('area')
+      // Buscar TODOS os territórios do jogador da tabela unificada
+      const { data: allTerritories, error: territoriesError } = await supabase
+        .from('conquest_history')
+        .select('area_lost, status')
         .eq('player_id', playerId)
 
       if (territoriesError) {
@@ -173,32 +189,15 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
         return
       }
 
-      // Buscar territórios perdidos/esgotados do histórico de conquistas
-      const { data: conquestHistory, error: historyError } = await supabase
-        .from('conquest_history')
-        .select('area_lost')
-        .eq('player_id', playerId)
-
-      if (historyError) {
-        console.error('❌ Erro ao buscar histórico de conquistas:', historyError)
-        return
-      }
-
-      // Calcular área total dos territórios ativos
-      const activeArea = playerTerritories?.reduce((sum, territory) => sum + (territory.area || 0), 0) || 0
-      
-      // Calcular área total perdida/esgotada
-      const lostArea = conquestHistory?.reduce((sum, conquest) => sum + (conquest.area_lost || 0), 0) || 0
-      
-      // Score total = área ativa + área perdida/esgotada
-      const totalArea = activeArea + lostArea
+      // Calcular área total (todos os territórios, independente do status)
+      const totalArea = allTerritories?.reduce((sum, territory) => sum + (territory.area_lost || 0), 0) || 0
       const newScore = Math.round(totalArea * 1000) // Converter para pontos
 
       // Debug: mostrar detalhes do cálculo
       console.log('🔍 Debug score jogador:', playerId)
-      console.log('  - Territórios ativos:', playerTerritories?.length || 0, 'Área total:', activeArea)
-      console.log('  - Histórico conquistas:', conquestHistory?.length || 0, 'Área perdida:', lostArea)
-      console.log('  - Total calculado:', totalArea, 'Score final:', newScore)
+      console.log('  - Total territórios:', allTerritories?.length || 0)
+      console.log('  - Área total:', totalArea)
+      console.log('  - Score final:', newScore)
 
       // Atualizar score do jogador
       const { error: updateError } = await supabase
@@ -211,7 +210,7 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
         return
       }
 
-      console.log('📈 Score do jogador atualizado:', playerId, 'Score:', newScore, 'Área ativa:', activeArea, 'Área perdida:', lostArea, 'Total:', totalArea)
+      console.log('📈 Score do jogador atualizado:', playerId, 'Score:', newScore, 'Área total:', totalArea)
     } catch (err) {
       console.error('❌ Erro inesperado ao atualizar score do jogador:', err)
     }
@@ -236,17 +235,20 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
       
       const teamId = normalizeTeam(team || userData?.team || (user as any).team)
       
-             const { data, error } = await supabase
-         .from('territories')
-         .insert({
-           team_id: teamId,
-           player_id: user.id,
-           polygon,
-           area,
-           conquered_at: new Date().toISOString()
-         })
-         .select()
-         .single()
+                    const { data, error } = await supabase
+          .from('conquest_history')
+          .insert({
+            team_id: teamId,
+            player_id: user.id,
+            polygon_coords: polygon,
+            area_lost: area,
+            conquering_team: teamId,
+            conquered_team: teamId,
+            status: 'active',
+            created_at: new Date().toISOString()
+          })
+          .select()
+          .single()
 
       if (error) throw error
 

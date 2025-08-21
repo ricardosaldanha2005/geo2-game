@@ -44,12 +44,12 @@ export function useTerritoryStats() {
       red: { total: 0 }
     }
 
-    // Calcular área total de cada equipe
+    // Calcular área total de cada equipe (apenas territórios ativos)
     territories.forEach(territory => {
       const teamKey = territory.team_id as keyof TeamStats
-      const area = territory.area || 0
+      const area = territory.area_lost || 0
       
-      console.log('🔍 Território:', territory.id, 'equipe:', territory.team_id, 'área:', area)
+      console.log('🔍 Território:', territory.id, 'equipe:', territory.team_id, 'área:', area, 'status:', territory.status)
       
       if (newStats[teamKey]) {
         newStats[teamKey].total += area

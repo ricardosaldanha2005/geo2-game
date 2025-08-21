@@ -622,7 +622,7 @@ export function MapView() {
           // console.log('🔍 Território:', territory.id, 'expires_at:', territory.expires_at, 'expirado:', isTerritoryExpired(territory.expires_at))
           
           try {
-            const coordinates = territory.polygon.coordinates[0]
+            const coordinates = territory.polygon_coords.coordinates[0]
             const positions = coordinates.map((coord: number[]) => ({
               lat: coord[1],
               lng: coord[0]
@@ -633,8 +633,10 @@ export function MapView() {
             // Calcular centro do polígono para a bandeira
             const center = calculatePolygonCenter(coordinates)
             
-            // Calcular tempo restante (verificar se expires_at existe)
-            const timeRemaining = territory.expires_at ? calculateTimeRemaining(territory.expires_at) : '--:--'
+            // Calcular tempo restante (baseado no created_at + 1 minuto)
+            const createdTime = new Date(territory.created_at).getTime()
+            const expiresTime = createdTime + 60000 // 1 minuto
+            const timeRemaining = calculateTimeRemaining(new Date(expiresTime).toISOString())
 
             return (
               <div key={`territory-${territory.id}`}>
