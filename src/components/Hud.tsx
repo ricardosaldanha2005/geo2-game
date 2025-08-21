@@ -24,8 +24,8 @@ export function Hud() {
     window.location.reload()
   }
 
-  // Debug: log das estatísticas no HUD (removido para evitar spam)
-  // console.log('🏆 HUD - Estatísticas recebidas:', stats)
+  // Debug: log das estatísticas no HUD
+  console.log('🏆 HUD - Estatísticas recebidas:', stats)
 
 
 

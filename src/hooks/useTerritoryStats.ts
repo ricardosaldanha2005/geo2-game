@@ -136,6 +136,9 @@ export function useTerritoryStats() {
     fetchConquestHistory()
   }, [])
 
+  // Debug: verificar se o hook está a ser chamado
+  console.log('🔧 useTerritoryStats hook executado, territories:', territories.length)
+
   return {
     stats,
     getTeamStats: (team: 'green' | 'blue' | 'red') => stats[team],

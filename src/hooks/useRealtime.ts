@@ -39,11 +39,15 @@ export function useRealtime() {
   const [onlineUsers, setOnlineUsers] = useState<User[]>([])
 
   useEffect(() => {
+    console.log('🔄 useRealtime: Iniciando...')
     // Verificar se o Supabase está configurado
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
     const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
     
+    console.log('🔧 useRealtime: Supabase config:', { hasUrl: !!supabaseUrl, hasKey: !!supabaseAnonKey, hasSupabase: !!supabase })
+    
     if (!supabaseUrl || !supabaseAnonKey || !supabase) {
+      console.log('🔄 useRealtime: Usando modo offline/mock')
       // Criar dados mock para funcionar offline
       const mockTerritories: Territory[] = []
       const mockUsers: User[] = [{
@@ -108,6 +112,7 @@ export function useRealtime() {
      const fetchTerritories = async () => {
      if (!supabase) return
      
+     console.log('🗺️ fetchTerritories: Iniciando busca...')
      try {
        const { data, error } = await supabase
          .from('territories')
@@ -116,6 +121,8 @@ export function useRealtime() {
          .abortSignal(new AbortController().signal) // Forçar sem cache
 
        if (error) throw error
+       
+       console.log('🗺️ fetchTerritories: Dados recebidos:', data?.length || 0, 'territórios')
 
        // Comparar com o estado atual para detectar mudanças
        const currentIds = territories.map(t => t.id).sort()
