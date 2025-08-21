@@ -6,6 +6,7 @@ import { Login } from '@/pages/Login'
 import { MapView } from '@/components/MapView'
 import { Controls } from '@/components/Controls'
 import { Leaderboard } from '@/pages/Leaderboard'
+import Admin from '@/pages/Admin'
 import { Hud } from '@/components/Hud'
 import { MobileHud } from '@/components/MobileHud'
 import { MobileControls } from '@/components/MobileControls'
@@ -60,6 +61,9 @@ function GameLayout() {
             <a href="/leaderboard" className="nav-button">
               🏆 Leaderboard
             </a>
+            <a href="/admin" className="nav-button">
+              🛠️ Admin
+            </a>
           </div>
         </div>
 
@@ -69,12 +73,6 @@ function GameLayout() {
 }
 
 function App() {
-  // Verificar se as variáveis de ambiente estão configuradas
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
-  
-  // Se não estiver configurado, funcionar em modo offline
-
   const { user, loading } = useAuth()
 
   // Listener para logout
@@ -103,6 +101,7 @@ function App() {
           <Routes>
             <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route path="/admin" element={<Admin />} />
             <Route path="/" element={<GameLayout />} />
           </Routes>
         </RealtimeProvider>
