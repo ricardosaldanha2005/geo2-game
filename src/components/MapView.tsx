@@ -622,7 +622,7 @@ export function MapView() {
           // console.log('🔍 Território:', territory.id, 'expires_at:', territory.expires_at, 'expirado:', isTerritoryExpired(territory.expires_at))
           
           try {
-            const coordinates = territory.polygon_coords.coordinates[0]
+            const coordinates = territory.polygon.coordinates[0]
             const positions = coordinates.map((coord: number[]) => ({
               lat: coord[1],
               lng: coord[0]

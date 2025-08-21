@@ -11,8 +11,9 @@ interface Territory {
   team_id: string;
   player_id: string;
   polygon: any;
-  area: number;
+  area_lost: number;
   created_at: string;
+  status: string;
 }
 
 interface TeamStats {

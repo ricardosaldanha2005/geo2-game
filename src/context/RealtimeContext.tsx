@@ -6,7 +6,7 @@ interface Territory {
   id: string;
   team_id: string;
   player_id: string;
-  polygon_coords: any; // Mudou para polygon_coords para compatibilidade com a migração
+  polygon: any; // Usar 'polygon' que existe na tabela
   area_lost: number; // Mudou de 'area' para 'area_lost' para manter compatibilidade
   created_at: string;
   status: 'active' | 'expired' | 'lost' | 'conquered';
@@ -240,7 +240,7 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
           .insert({
             team_id: teamId,
             player_id: user.id,
-            polygon_coords: polygon,
+            polygon: polygon,
             area_lost: area,
             conquering_team: teamId,
             conquered_team: teamId,
