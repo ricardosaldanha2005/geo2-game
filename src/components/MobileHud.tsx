@@ -121,8 +121,8 @@ export function MobileHud() {
   }, [])
 
   return (
-    <div className={`mobile-hud bg-gray-800 px-2 py-1.5 rounded-lg shadow-lg ${isIPhone ? 'text-[11px]' : 'text-sm'}`} 
-         style={{ border: `1px solid ${myColor}`, width: '100%' }}>
+    <div className={`mobile-hud bg-gray-800/95 px-3 py-2 rounded-xl shadow-lg ${isIPhone ? 'text-[11px]' : 'text-sm'}`} 
+         style={{ border: `1px solid ${myColor}`, width: 'calc(100vw - 24px)', margin: '0 auto' }}>
       <div className="flex items-center justify-between gap-2">
         {/* Texto à esquerda (linha única para menor altura) */}
         <div className="flex-1 text-left text-[11px] md:text-[12px] leading-tight">
