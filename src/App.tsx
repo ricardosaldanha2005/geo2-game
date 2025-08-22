@@ -57,10 +57,11 @@ function GameLayout() {
           {isMobile ? <MobileControls /> : <Controls />}
         </div>
         <div className="top-right">
-          {isMobile ? <MobileHud /> : <Hud />}
+          {!isMobile && <Hud />}
         </div>
         <div className="bottom-center">
-          <div className="navigation">
+          {isMobile && <MobileHud />}
+          <div className="navigation" style={{ marginTop: isMobile ? 8 : 0 }}>
             <a href="/leaderboard" className="nav-button">
               🏆 Leaderboard
             </a>
