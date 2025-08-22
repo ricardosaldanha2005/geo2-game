@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
+import { safeStorage } from '@/lib/storage'
 import { useGameStore } from '@/store/gameStore'
 
 export function useGeo() {
@@ -9,6 +10,7 @@ export function useGeo() {
   const watchIdRef = useRef<number | null>(null)
   const positionRef = useRef<[number, number] | null>(null)
   const { updatePlayerPosition } = useGameStore()
+  const defaultCenter: [number, number] = [41.1333, -8.6167]
 
   // Função para atualizar posição manualmente (para controles de teclado)
   const updatePositionManual = (newPosition: [number, number]) => {
@@ -22,12 +24,11 @@ export function useGeo() {
 
   useEffect(() => {
     // Verificar se estamos no modo mock (usar storage seguro para iOS privado)
-    const gameMode = (typeof window !== 'undefined' && window.localStorage) ? localStorage.getItem('gameMode') : null
+    const gameMode = safeStorage.getItem('gameMode')
     const isMockMode = gameMode === 'mock'
-    
-    // Se estiver em modo mock, usar posição fixa
+
     if (isMockMode) {
-      const initialPosition: [number, number] = [41.1333, -8.6167] // Gaia
+      const initialPosition: [number, number] = defaultCenter
       setPosition(initialPosition)
       positionRef.current = initialPosition
       setError(null)
@@ -35,48 +36,46 @@ export function useGeo() {
       updatePlayerPosition(initialPosition)
       return
     }
-    
-    // Por padrão, usar GPS real (não mock)
-    console.log('🌍 Usando GPS real - Modo:', gameMode || 'live')
 
-    // Verificar se o Supabase está configurado
-    if (!supabase) {
-      setError('Supabase não configurado')
-      return
-    }
-    
+    // GPS real
     if (!navigator.geolocation) {
       setError('Geolocalização não disponível neste dispositivo')
+      // Fallback: permitir que o mapa carregue
+      setPosition(defaultCenter)
+      updatePlayerPosition(defaultCenter)
       return
     }
 
     setIsTracking(true)
 
-    // Obter posição inicial com alta precisão
+    const geoOptions: PositionOptions = {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0,
+    }
+
+    // Posição inicial
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const newPosition: [number, number] = [pos.coords.latitude, pos.coords.longitude]
-        console.log('📍 GPS Position:', newPosition, 'Accuracy:', pos.coords.accuracy, 'm')
         setPosition(newPosition)
         setError(null)
         updatePlayerPosition(newPosition)
       },
       (err) => {
         setError(`Erro GPS: ${err.message}`)
+        // Fallback para carregar o mapa mesmo sem GPS
+        setPosition(defaultCenter)
+        updatePlayerPosition(defaultCenter)
         setIsTracking(false)
       },
-      {
-        enableHighAccuracy: true, // Alta precisão para iPhone
-        timeout: 10000, // Mais tempo para iPhone
-        maximumAge: 0 // Sempre obter posição atual
-      }
+      geoOptions
     )
 
-    // Iniciar rastreamento contínuo com alta precisão
+    // Rastreamento contínuo (melhor esforço)
     watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => {
         const newPosition: [number, number] = [pos.coords.latitude, pos.coords.longitude]
-        console.log('📍 GPS Update:', newPosition, 'Accuracy:', pos.coords.accuracy, 'm')
         setPosition(newPosition)
         setError(null)
         updatePlayerPosition(newPosition)
@@ -84,11 +83,7 @@ export function useGeo() {
       (err) => {
         setError(`Erro GPS: ${err.message}`)
       },
-      {
-        enableHighAccuracy: true, // Alta precisão para iPhone
-        timeout: 10000, // Mais tempo para iPhone
-        maximumAge: 0 // Sempre obter posição atual
-      }
+      geoOptions
     )
 
     return () => {
