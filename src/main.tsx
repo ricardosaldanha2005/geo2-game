@@ -3,8 +3,10 @@ import { createRoot } from 'react-dom/client'
 import App from './App'
 import './styles/index.css'
 import { dbg } from '@/lib/debug'
+import { applyModeFromUrl } from '@/lib/mode'
 
 dbg.enableFromQuery()
+applyModeFromUrl()
 
 class RootErrorBoundary extends React.Component<{}, { hasError: boolean, message?: string }> {
   constructor(props: {}) {

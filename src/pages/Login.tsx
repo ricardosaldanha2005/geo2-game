@@ -12,6 +12,7 @@ export function Login() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [gameMode, setGameMode] = useState<'live' | 'mock'>('live')
+  const isProd = import.meta.env.PROD
 
   useEffect(() => {
     const saved = safeStorage.getItem('gameMode') as 'live' | 'mock' | null
@@ -67,26 +68,28 @@ export function Login() {
         </div>
         
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {/* Toggle de Modo (GPS real vs Mock) para iPhone/privado */}
-          <div className="p-3 bg-gray-800 rounded border border-gray-700">
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-gray-300">Modo de localização</div>
-              <button
-                type="button"
-                onClick={toggleGameMode}
-                className={`px-3 py-1 rounded text-xs font-semibold transition-colors ${
-                  gameMode === 'mock' ? 'bg-orange-600 hover:bg-orange-700 text-white' : 'bg-green-600 hover:bg-green-700 text-white'
-                }`}
-              >
-                {gameMode === 'mock' ? '🎭 Teste (Mock)' : '🌍 Real (GPS)'}
-              </button>
+          {/* Toggle visível apenas fora de produção; em produção usar ?mode=mock */}
+          {!isProd && (
+            <div className="p-3 bg-gray-800 rounded border border-gray-700">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-300">Modo de localização</div>
+                <button
+                  type="button"
+                  onClick={toggleGameMode}
+                  className={`px-3 py-1 rounded text-xs font-semibold transition-colors ${
+                    gameMode === 'mock' ? 'bg-orange-600 hover:bg-orange-700 text-white' : 'bg-green-600 hover:bg-green-700 text-white'
+                  }`}
+                >
+                  {gameMode === 'mock' ? '🎭 Teste (Mock)' : '🌍 Real (GPS)'}
+                </button>
+              </div>
+              <p className="text-xs text-gray-400 mt-2">
+                {gameMode === 'mock'
+                  ? 'Usa uma posição fixa para testar sem GPS. Ideal no iPhone em privado.'
+                  : 'Usa o GPS real do dispositivo.'}
+              </p>
             </div>
-            <p className="text-xs text-gray-400 mt-2">
-              {gameMode === 'mock'
-                ? 'Usa uma posição fixa para testar sem GPS. Ideal no iPhone em privado.'
-                : 'Usa o GPS real do dispositivo.'}
-            </p>
-          </div>
+          )}
 
           <div className="rounded-md shadow-sm -space-y-px">
             {isSignUp && (
