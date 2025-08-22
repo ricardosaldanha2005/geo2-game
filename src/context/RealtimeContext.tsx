@@ -324,8 +324,14 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
     
     setLoading(false);
 
+    // Se o Supabase não está configurado, evita subscrições e timers
+    if (!supabase) {
+      console.log('⚠️ Supabase não configurado - ignorando subscrições realtime e timers');
+      return;
+    }
+
     // Set up real-time subscriptions para conquest_history
-    const territoriesSubscription = supabase!
+    const territoriesSubscription = supabase
       .channel('conquest_history_changes')
       .on('postgres_changes', 
         { event: 'INSERT', schema: 'public', table: 'conquest_history' },
@@ -343,7 +349,7 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
       )
       .subscribe();
 
-    const onlineUsersSubscription = supabase!
+    const onlineUsersSubscription = supabase
       .channel('online_users_changes')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'online_users' },
@@ -442,8 +448,8 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
 
          // Cleanup subscriptions
      return () => {
-       territoriesSubscription.unsubscribe();
-       onlineUsersSubscription.unsubscribe();
+       try { territoriesSubscription.unsubscribe(); } catch {}
+       try { onlineUsersSubscription.unsubscribe(); } catch {}
        clearInterval(expiredCheckInterval);
      };
   }, [user]);
