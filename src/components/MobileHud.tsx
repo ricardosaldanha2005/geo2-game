@@ -5,6 +5,7 @@ import { useMobile } from '@/hooks/useMobile'
 import { useState, useEffect } from 'react'
 import { safeStorage } from '@/lib/storage'
 import { useAuth } from '@/hooks/useAuth'
+import { supabase } from '@/lib/supabase'
 
 export function MobileHud() {
   const { territories, onlineUsers } = useRealtime()
@@ -100,55 +101,71 @@ export function MobileHud() {
     .map(k => ({ k, v: totals[k] }))
     .sort((a, b) => b.v - a.v)[0]
 
+  // Total de utilizadores (para exibir online/total) – opcional
+  const [totalUsers, setTotalUsers] = useState<number | null>(null)
+  useEffect(() => {
+    let active = true
+    const fetchTotal = async () => {
+      if (!supabase) return
+      try {
+        const { count } = await supabase
+          .from('users')
+          .select('id', { count: 'exact', head: true })
+        if (active) setTotalUsers(count ?? null)
+      } catch {
+        // ignore
+      }
+    }
+    fetchTotal()
+    return () => { active = false }
+  }, [])
+
   return (
-    <div className={`mobile-hud bg-gray-900/80 p-2 rounded-xl shadow-lg ${isIPhone ? 'text-xs' : 'text-sm'}`} 
-         style={{ border: `1px solid ${myColor}`, width: 'min(100%, 420px)' }}>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: myColor }} />
-          <span className="text-white font-semibold">Território Ativo</span>
+    <div className={`mobile-hud bg-gray-800 p-3 rounded-xl shadow-lg ${isIPhone ? 'text-xs' : 'text-sm'}`} 
+         style={{ border: `2px solid ${myColor}`, width: '100%' }}>
+      <div className="flex items-center justify-between gap-3">
+        {/* Texto à esquerda */}
+        <div className="flex-1 text-left">
+          <div className="text-white font-semibold mb-1">Território Total Conquistado {sumTotal.toFixed(1)} km²</div>
+          <div className="text-gray-300">Nº Territórios: <span className="text-white">{territories.length}</span></div>
+          <div className="text-gray-300">Jogadores Online: <span className="text-white">{onlineUsers.length}{totalUsers ? `/${totalUsers}` : ''}</span></div>
+          <div className="mt-1 text-gray-300">A ganhar: <span className="font-semibold" style={{ color: getTeamColor(leader.k as any) }}>{leader.k.toUpperCase()}</span></div>
         </div>
-        <span className="text-white font-bold">{Number(myStats.total).toFixed(1)} km²</span>
-      </div>
 
-      <div className="w-full bg-gray-700 rounded-full h-1.5 mt-2">
-        <div className="h-1.5 rounded-full transition-all duration-300" style={{ width: `${getBarWidth(Number(myStats.total))}%`, backgroundColor: myColor }} />
-      </div>
-
-      {/* Pie chart total por equipa */}
-      <div className="mt-3 flex items-center gap-3">
-        <div
-          aria-label="Distribuição por equipa"
-          className="shrink-0"
-          style={{
-            width: 56,
-            height: 56,
-            borderRadius: '9999px',
-            background: sumTotal > 0 ? `conic-gradient(${gradient})` : '#374151',
-            border: '2px solid #1f2937'
-          }}
-        />
-        <div className="flex-1 grid grid-cols-3 gap-2 text-[10px]">
-          {(['green','blue','red'] as const).map(k => (
-            <div key={k} className="flex items-center gap-1">
-              <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: getTeamColor(k) }} />
-              <span className="text-gray-300 capitalize">{k}:</span>
-              <span className="text-white">{totals[k].toFixed(1)} km²</span>
-            </div>
-          ))}
-          <div className="col-span-3 text-[11px] mt-1">
-            <span className="text-gray-300">A ganhar:</span>
-            <span className="ml-1 font-semibold" style={{ color: getTeamColor(leader.k as any) }}>
-              {leader.k.toUpperCase()} ({leader.v.toFixed(1)} km²)
-            </span>
-          </div>
+        {/* Pie à direita com SVG para separadores limpos */}
+        <div className="shrink-0" style={{ width: 120, height: 120 }}>
+          <svg viewBox="0 0 42 42" width="120" height="120" aria-label="Distribuição por equipa">
+            <circle cx="21" cy="21" r="20" fill="#111827" stroke="#ffffff" strokeWidth="1.5" />
+            {(() => {
+              const r = 16.5
+              const c = 2 * Math.PI * r
+              const g = (pct.green / 100) * c
+              const b = (pct.blue / 100) * c
+              const rr = (pct.red / 100) * c
+              const segs = [
+                { color: getTeamColor('green'), len: g },
+                { color: getTeamColor('blue'), len: b },
+                { color: getTeamColor('red'), len: rr },
+              ]
+              let offset = 0
+              return segs.map((s, i) => {
+                const el = (
+                  <circle key={i}
+                    cx="21" cy="21" r={r}
+                    fill="transparent"
+                    stroke={s.color}
+                    strokeWidth="7.5"
+                    strokeDasharray={`${s.len} ${c - s.len}`}
+                    strokeDashoffset={-offset}
+                    transform="rotate(-90 21 21)"
+                  />
+                )
+                offset += s.len
+                return el
+              })
+            })()}
+          </svg>
         </div>
-      </div>
-
-      <div className="mt-2 grid grid-cols-3 text-center text-[10px] text-gray-300">
-        <div>GPS: <span className={isTracking ? 'text-green-400' : 'text-red-400'}>{isTracking ? 'Ativo' : 'Off'}</span></div>
-        <div>Territórios: <span className="text-white">{territories.length}</span></div>
-        <div>Jogadores: <span className="text-white">{onlineUsers.length}</span></div>
       </div>
     </div>
   )
