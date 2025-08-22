@@ -69,6 +69,37 @@ export function MobileHud() {
   const myStats = normalizedStats[teamKey]
   const myColor = getTeamColor(teamKey)
 
+  // Totais por equipa para pie chart
+  const totals = {
+    green: Number(normalizedStats.green.total || 0),
+    blue: Number(normalizedStats.blue.total || 0),
+    red: Number(normalizedStats.red.total || 0)
+  }
+  const sumTotal = Math.max(0, totals.green + totals.blue + totals.red)
+  const pct = sumTotal > 0 ? {
+    green: (totals.green / sumTotal) * 100,
+    blue: (totals.blue / sumTotal) * 100,
+    red: (totals.red / sumTotal) * 100
+  } : { green: 0, blue: 0, red: 0 }
+  const segments = [
+    { color: getTeamColor('green'), value: pct.green, key: 'green' },
+    { color: getTeamColor('blue'), value: pct.blue, key: 'blue' },
+    { color: getTeamColor('red'), value: pct.red, key: 'red' }
+  ]
+  let acc = 0
+  const gradient = segments
+    .filter(s => s.value > 0.01)
+    .map(s => {
+      const start = acc
+      const end = acc + s.value
+      acc = end
+      return `${s.color} ${start}% ${end}%`
+    })
+    .join(', ')
+  const leader = (['green','blue','red'] as const)
+    .map(k => ({ k, v: totals[k] }))
+    .sort((a, b) => b.v - a.v)[0]
+
   return (
     <div className={`mobile-hud bg-gray-900/80 p-2 rounded-xl shadow-lg ${isIPhone ? 'text-xs' : 'text-sm'}`} 
          style={{ border: `1px solid ${myColor}`, width: 'min(100%, 420px)' }}>
@@ -82,6 +113,36 @@ export function MobileHud() {
 
       <div className="w-full bg-gray-700 rounded-full h-1.5 mt-2">
         <div className="h-1.5 rounded-full transition-all duration-300" style={{ width: `${getBarWidth(Number(myStats.total))}%`, backgroundColor: myColor }} />
+      </div>
+
+      {/* Pie chart total por equipa */}
+      <div className="mt-3 flex items-center gap-3">
+        <div
+          aria-label="Distribuição por equipa"
+          className="shrink-0"
+          style={{
+            width: 56,
+            height: 56,
+            borderRadius: '9999px',
+            background: sumTotal > 0 ? `conic-gradient(${gradient})` : '#374151',
+            border: '2px solid #1f2937'
+          }}
+        />
+        <div className="flex-1 grid grid-cols-3 gap-2 text-[10px]">
+          {(['green','blue','red'] as const).map(k => (
+            <div key={k} className="flex items-center gap-1">
+              <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: getTeamColor(k) }} />
+              <span className="text-gray-300 capitalize">{k}:</span>
+              <span className="text-white">{totals[k].toFixed(1)} km²</span>
+            </div>
+          ))}
+          <div className="col-span-3 text-[11px] mt-1">
+            <span className="text-gray-300">A ganhar:</span>
+            <span className="ml-1 font-semibold" style={{ color: getTeamColor(leader.k as any) }}>
+              {leader.k.toUpperCase()} ({leader.v.toFixed(1)} km²)
+            </span>
+          </div>
+        </div>
       </div>
 
       <div className="mt-2 grid grid-cols-3 text-center text-[10px] text-gray-300">
