@@ -51,11 +51,18 @@ function makeFlagIcon(color: string) {
   })
 }
 
-const getPlayerIcon = (user: any, onlineUsers: any[]) => {
+const normalizeTeam = (team?: string): 'green' | 'blue' | 'red' => {
+  const t = (team || '').toString().toLowerCase().trim()
+  if (t === 'blue') return 'blue'
+  if (t === 'red') return 'red'
+  return 'green'
+}
+
+const getPlayerIcon = (user: any, onlineUsers: any[], fallbackTeam?: string) => {
   const userData = onlineUsers.find(u => u.id === user?.id)
-  const teamColor = userData?.team === 'blue' ? '#2563eb' : 
-                   userData?.team === 'red' ? '#dc2626' : '#16a34a'
-  const playerName = userData?.name || user?.user_metadata?.name || 'Jogador'
+  const team = normalizeTeam((userData as any)?.team || (userData as any)?.team_id || fallbackTeam || (user as any)?.user_metadata?.team)
+  const teamColor = team === 'blue' ? '#2563eb' : team === 'red' ? '#dc2626' : '#16a34a'
+  const playerName = (userData as any)?.name || user?.user_metadata?.name || 'Jogador'
   return makeLabeledIcon(teamColor, playerName)
 }
 
@@ -211,8 +218,13 @@ export function MapView() {
   // Usar apenas a posição do useGeo para evitar conflitos
   const currentPosition = position || defaultCenter
   
-  // Usar posição real do GPS sem ajustes artificiais
-  const myTeam = currentPlayer?.team || onlineUsers.find(u => u.id === user?.id)?.team || 'green'
+  // Determinar equipa do jogador atual com normalização e fallbacks
+  const myTeam = normalizeTeam(
+    (currentPlayer as any)?.team ||
+    (onlineUsers.find(u => (u as any).id === user?.id) as any)?.team ||
+    (onlineUsers.find(u => (u as any).id === user?.id) as any)?.team_id ||
+    (user as any)?.user_metadata?.team
+  )
   
   // Posição do marker simplificada para performance
   const positionMemo = { 
@@ -561,7 +573,7 @@ export function MapView() {
         />
         
         {/* Peão do jogador */}
-        <Marker position={positionMemo} icon={getPlayerIcon(user, onlineUsers)} />
+        <Marker position={positionMemo} icon={getPlayerIcon(user, onlineUsers, myTeam)} />
 
         {/* Linha de traço atual */}
         {trace.length > 0 && (
