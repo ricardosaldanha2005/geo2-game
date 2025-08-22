@@ -50,7 +50,7 @@ export function Leaderboard() {
                   </div>
                   <div className="text-right">
                     <div className="font-semibold">0</div>
-                    <div className="text-xs text-gray-400">pontos</div>
+                    <div className="text-xs text-gray-400">km²</div>
                   </div>
                 </div>
               </div>
@@ -65,7 +65,7 @@ export function Leaderboard() {
             <div className="grid grid-cols-2 gap-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-green-400">0</div>
-                <div className="text-sm text-gray-400">Pontos Totais</div>
+                <div className="text-sm text-gray-400">km² Conquistados</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-gray-400">

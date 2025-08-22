@@ -13,7 +13,7 @@ const Admin: React.FC = () => {
   };
 
   const resetAllScores = async () => {
-    if (!confirm('Tens a certeza que queres resetar TODAS as pontuações dos jogadores?')) return;
+    if (!confirm('Tens a certeza que queres resetar TODAS as áreas conquistadas dos jogadores?')) return;
     
     setLoading(true);
     try {
@@ -23,7 +23,7 @@ const Admin: React.FC = () => {
         .neq('id', '00000000-0000-0000-0000-000000000000'); // Update all users
 
       if (error) throw error;
-      showMessage('✅ Todas as pontuações foram resetadas!', 'success');
+      showMessage('✅ Todas as áreas conquistadas foram resetadas!', 'success');
     } catch (error) {
       console.error('Erro ao resetar pontuações:', error);
       showMessage('❌ Erro ao resetar pontuações', 'error');
@@ -32,7 +32,7 @@ const Admin: React.FC = () => {
   };
 
   const recalculateAllScores = async () => {
-    if (!confirm('Recalcular pontuações baseado nos territórios existentes?')) return;
+    if (!confirm('Recalcular áreas conquistadas baseado nos territórios existentes?')) return;
     
     setLoading(true);
     try {
@@ -57,7 +57,7 @@ const Admin: React.FC = () => {
 
         // Calcular área total
         const totalArea = territories?.reduce((sum, territory) => sum + (territory.area_lost || 0), 0) || 0;
-        const newScore = Math.round(totalArea * 1000);
+        const newScore = Math.round(totalArea * 1000) / 1000; // Manter como km²
 
         // Atualizar score
         const { error: updateError } = await supabase
@@ -70,7 +70,7 @@ const Admin: React.FC = () => {
         }
       }
 
-      showMessage('✅ Pontuações recalculadas baseado nos territórios existentes!', 'success');
+      showMessage('✅ Áreas totais (km²) recalculadas baseado nos territórios existentes!', 'success');
     } catch (error) {
       console.error('Erro ao recalcular pontuações:', error);
       showMessage('❌ Erro ao recalcular pontuações', 'error');
@@ -92,7 +92,7 @@ const Admin: React.FC = () => {
 
       if (territoriesError) throw territoriesError;
 
-      // Resetar todas as pontuações
+      // Resetar todas as áreas conquistadas
       const { error: scoresError } = await supabase
         .from('users')
         .update({ score: 0 })
@@ -100,7 +100,7 @@ const Admin: React.FC = () => {
 
       if (scoresError) throw scoresError;
 
-      showMessage('✅ Jogo completamente resetado! Todos os territórios e pontuações foram apagados.', 'success');
+      showMessage('✅ Jogo completamente resetado! Todos os territórios e áreas conquistadas foram apagados.', 'success');
     } catch (error) {
       console.error('Erro ao resetar jogo:', error);
       showMessage('❌ Erro ao resetar jogo completamente', 'error');
@@ -143,7 +143,7 @@ const Admin: React.FC = () => {
 
       // Calcular área total
       const totalArea = territories?.reduce((sum, territory) => sum + (territory.area_lost || 0), 0) || 0;
-      const newScore = Math.round(totalArea * 1000);
+      const newScore = Math.round(totalArea * 1000) / 1000; // Manter como km²
 
       // Atualizar score
       const { error: updateError } = await supabase
@@ -153,7 +153,7 @@ const Admin: React.FC = () => {
 
       if (updateError) throw updateError;
 
-      showMessage(`✅ Tua pontuação foi recalculada: ${newScore} pontos (${totalArea.toFixed(3)} km²)`, 'success');
+      showMessage(`✅ Tua área total foi recalculada: ${newScore.toFixed(3)} km²`, 'success');
     } catch (error) {
       console.error('Erro ao recalcular minha pontuação:', error);
       showMessage('❌ Erro ao recalcular pontuação', 'error');
@@ -192,14 +192,14 @@ const Admin: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Pontuações */}
           <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
-            <h2 className="text-xl font-bold mb-4 text-yellow-400">📊 Gestão de Pontuações</h2>
+            <h2 className="text-xl font-bold mb-4 text-yellow-400">📊 Gestão de Áreas Conquistadas</h2>
             
             <button
               onClick={forceRecalculateMyScore}
               disabled={loading}
               className="w-full mb-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 px-4 py-2 rounded transition-colors"
             >
-              🔄 Recalcular Minha Pontuação
+              🔄 Recalcular Minha Área Total
             </button>
 
             <button
@@ -207,7 +207,7 @@ const Admin: React.FC = () => {
               disabled={loading}
               className="w-full mb-3 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-600 px-4 py-2 rounded transition-colors"
             >
-              🧮 Recalcular Todas as Pontuações
+              🧮 Recalcular Todas as Áreas
             </button>
 
             <button
@@ -215,7 +215,7 @@ const Admin: React.FC = () => {
               disabled={loading}
               className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-600 px-4 py-2 rounded transition-colors"
             >
-              🗑️ Resetar Todas as Pontuações
+              🗑️ Resetar Todas as Áreas
             </button>
           </div>
 
@@ -245,11 +245,11 @@ const Admin: React.FC = () => {
         <div className="mt-8 bg-gray-800 p-6 rounded-lg border border-gray-700">
           <h2 className="text-xl font-bold mb-4 text-purple-400">ℹ️ Informações</h2>
           <div className="text-sm text-gray-300 space-y-2">
-            <p><strong>🔄 Recalcular Minha Pontuação:</strong> Recalcula apenas a tua pontuação baseado nos territórios que tens na base de dados</p>
-            <p><strong>🧮 Recalcular Todas as Pontuações:</strong> Recalcula as pontuações de todos os jogadores baseado nos territórios existentes</p>
-            <p><strong>🗑️ Resetar Todas as Pontuações:</strong> Coloca todas as pontuações a zero (não apaga territórios)</p>
+            <p><strong>🔄 Recalcular Minha Área Total:</strong> Recalcula apenas a tua área total (km²) baseado nos territórios que tens na base de dados</p>
+            <p><strong>🧮 Recalcular Todas as Áreas:</strong> Recalcula as áreas totais (km²) de todos os jogadores baseado nos territórios existentes</p>
+            <p><strong>🗑️ Resetar Todas as Áreas:</strong> Coloca todas as áreas conquistadas a zero (não apaga territórios)</p>
             <p><strong>🧹 Limpar Territórios Expirados:</strong> Remove da base de dados todos os territórios com status "expired"</p>
-            <p><strong>☢️ Reset Completo:</strong> APAGA TUDO - territórios e pontuações (não há volta atrás!)</p>
+            <p><strong>☢️ Reset Completo:</strong> APAGA TUDO - territórios e áreas conquistadas (não há volta atrás!)</p>
           </div>
         </div>
 

@@ -227,7 +227,7 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
 
       // Calcular área total (todos os territórios, independente do status)
       const totalArea = allTerritories?.reduce((sum, territory) => sum + (territory.area_lost || 0), 0) || 0
-      const newScore = Math.round(totalArea * 1000) // Converter para pontos
+      const newScore = Math.round(totalArea * 1000) / 1000 // Manter como km² (3 casas decimais)
 
       // Debug: mostrar detalhes do cálculo
       console.log('🔍 Debug score jogador:', playerId)
@@ -246,7 +246,7 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
         return
       }
 
-      console.log('📈 Score do jogador atualizado:', playerId, 'Score:', newScore, 'Área total:', totalArea)
+      console.log('📈 Score do jogador atualizado:', playerId, 'Área total (km²):', newScore)
     } catch (err) {
       console.error('❌ Erro inesperado ao atualizar score do jogador:', err)
     }
