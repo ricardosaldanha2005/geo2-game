@@ -8,7 +8,7 @@ import { applyModeFromUrl } from '@/lib/mode'
 dbg.enableFromQuery()
 applyModeFromUrl()
 
-class RootErrorBoundary extends React.Component<{}, { hasError: boolean, message?: string }> {
+class RootErrorBoundary extends React.Component<{ children?: React.ReactNode }, { hasError: boolean, message?: string }> {
   constructor(props: {}) {
     super(props)
     this.state = { hasError: false, message: undefined }

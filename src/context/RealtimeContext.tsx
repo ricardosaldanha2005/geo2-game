@@ -136,15 +136,15 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
       // Primeiro, verificar quantos territórios temos antes
       console.log('📊 Territórios antes da verificação:', territories.length);
       
-      // Buscar territórios que devem ter expirado (exatamente 1 minuto após criação)
-      const oneMinuteAgo = new Date(Date.now() - 60000);
-      console.log('⏰ Verificando territórios criados antes de:', oneMinuteAgo.toISOString());
+      // Buscar territórios que devem ter expirado (exatamente 5 minutos após criação)
+      const fiveMinutesAgo = new Date(Date.now() - 300000);
+      console.log('⏰ Verificando territórios criados antes de:', fiveMinutesAgo.toISOString());
       
       const { data: expiredTerritories, error: fetchError } = await supabase
         .from('conquest_history')
         .select('id, created_at')
         .eq('status', 'active')
-        .lt('created_at', oneMinuteAgo.toISOString());
+        .lt('created_at', fiveMinutesAgo.toISOString());
 
       if (fetchError) {
         console.error('❌ Erro ao buscar territórios expirados:', fetchError);
@@ -370,10 +370,10 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
       }
 
       try {
-        // Atualizar status para 'expired' quando o relógio chega a zero (60 segundos após criação)
-        const oneMinuteAgo = new Date(Date.now() - 60000).toISOString();
+        // Atualizar status para 'expired' quando o relógio chega a zero (5 minutos após criação)
+        const fiveMinutesAgo = new Date(Date.now() - 300000).toISOString();
         
-        console.log('🕐 Buscando territórios para EXPIRAR criados antes de:', oneMinuteAgo);
+        console.log('🕐 Buscando territórios para EXPIRAR criados antes de:', fiveMinutesAgo);
         
         // Primeiro, buscar TODOS os territórios ativos para debug
         const { data: allActive } = await supabase
@@ -397,7 +397,7 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
           .from('conquest_history')
           .select('id, created_at')
           .eq('status', 'active')
-          .lt('created_at', oneMinuteAgo);
+          .lt('created_at', fiveMinutesAgo);
 
         console.log('🔍 Territórios encontrados para expirar:', toExpire?.length || 0);
 
@@ -439,7 +439,7 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
             await fetchTerritories();
           }
         } else {
-          console.log('⏰ Nenhum território para expirar (criteria: created_at < ' + oneMinuteAgo + ')');
+          console.log('⏰ Nenhum território para expirar (criteria: created_at < ' + fiveMinutesAgo + ')');
         }
       } catch (err) {
         console.error('❌ Erro no intervalo:', err);

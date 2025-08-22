@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react'
-import { supabase } from '@/lib/supabase'
 import { safeStorage } from '@/lib/storage'
 import { useGameStore } from '@/store/gameStore'
 

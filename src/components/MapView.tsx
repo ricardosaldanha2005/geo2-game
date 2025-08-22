@@ -1,12 +1,12 @@
 import { MapContainer, TileLayer, Marker, Polyline, Polygon, useMap } from 'react-leaflet'
 import L from 'leaflet'
-import { useEffect, useMemo, useState, useRef } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useGeo } from '@/hooks/useGeo'
 import { useRealtimeContext } from '@/context/RealtimeContext'
 import { useGameStore } from '@/store/gameStore'
 import { useKeyboardControls } from '@/hooks/useKeyboardControls'
-import { useTerritoryStats } from '@/hooks/useTerritoryStats'
+// import { useTerritoryStats } from '@/hooks/useTerritoryStats'
 
 // Centro padrão do mapa (Gaia - Rua da Cortinha)
 const defaultCenter: [number, number] = [41.1333, -8.6167]
@@ -100,11 +100,7 @@ const calculateTimeRemaining = (expiresAt: string): string => {
 }
 
 // Função para verificar se um território está expirado
-const isTerritoryExpired = (expiresAt: string): boolean => {
-  const now = new Date()
-  const expiration = new Date(expiresAt)
-  return expiration.getTime() <= now.getTime()
-}
+// const isTerritoryExpired = (expiresAt: string): boolean => false
 
 // Função para criar ícone com tempo restante
 function makeTerritoryIcon(color: string, timeRemaining: string) {
@@ -210,7 +206,7 @@ export function MapView() {
   }
 
   // Ativar controles de teclado
-  const { isMoving } = useKeyboardControls({
+  useKeyboardControls({
     onMove: handleMove,
     enabled: true
   })
@@ -588,9 +584,9 @@ export function MapView() {
         )}
         
         {/* Paths persistentes */}
-        {paths.map((path, i) => (
+        {paths.map((path) => (
           <Polyline 
-            key={`path-${i}`} 
+            key={`path-${path.length}-${path[0]?.[0] ?? 0}`} 
             positions={path.map(([lat, lng]) => ({ lat, lng }))} 
             color={myTeamColor} 
             pathOptions={{ weight: 8 }} 
@@ -626,9 +622,9 @@ export function MapView() {
                 {/* Territórios salvos no banco (limitados para performance) */}
         {territories
           .slice(0, 20)
-          .map((territory, i) => {
+          .map((territory) => {
           // Usar timeUpdate para forçar re-renderização e atualizar o tempo
-          const _ = timeUpdate
+          void timeUpdate
           
           // Debug: verificar se o território tem expires_at (removido para evitar spam)
           // console.log('🔍 Território:', territory.id, 'expires_at:', territory.expires_at, 'expirado:', isTerritoryExpired(territory.expires_at))
@@ -645,9 +641,9 @@ export function MapView() {
             // Calcular centro do polígono para a bandeira
             const center = calculatePolygonCenter(coordinates)
             
-            // Calcular tempo restante (baseado no created_at + 1 minuto)
+            // Calcular tempo restante (baseado no created_at + 5 minutos)
             const createdTime = new Date(territory.created_at).getTime()
-            const expiresTime = createdTime + 60000 // 1 minuto
+            const expiresTime = createdTime + 300000 // 5 minutos
             const timeRemaining = calculateTimeRemaining(new Date(expiresTime).toISOString())
 
             return (

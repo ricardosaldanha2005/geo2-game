@@ -254,7 +254,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
   },
 
-  captureTerritory: async (territoryId: string) => {
+  captureTerritory: async (_territoryId: string) => {
     // Implementação omitida
   },
 
