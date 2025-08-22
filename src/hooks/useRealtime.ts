@@ -107,18 +107,13 @@ export function useRealtime() {
           fetchOnlineUsers()
         }, 30000) // Verificar a cada 30 segundos
 
-        // Sistema de verificação de áreas expiradas
-        const expirationCheckInterval = setInterval(() => {
-          console.log('⏰ Verificação de expiração executada')
-          checkExpiredTerritories()
-        }, 60000) // Verificar a cada 60 segundos
+        // Sistema de verificação de áreas expiradas desativado (gerido no RealtimeContext)
 
          // Sistema simplificado - apenas polling agressivo
      // Removendo real-time que pode estar a causar conflitos
 
                                        return () => {
          clearInterval(mainInterval)
-         clearInterval(expirationCheckInterval)
        }
   }, [user])
 
@@ -451,83 +446,7 @@ export function useRealtime() {
      }
    }
 
-   // Função para verificar e processar áreas expiradas
-   const checkExpiredTerritories = async () => {
-     if (!supabase) return
-
-     try {
-       console.log('⏰ Verificando áreas expiradas...')
-       
-       // Primeiro, verificar se há territórios expirados
-       const { data: expiredTerritories, error: checkError } = await supabase
-         .from('territories')
-         .select('id, team_id, player_id, area')
-         .lte('expires_at', new Date().toISOString())
-
-       if (checkError) {
-         console.error('❌ Erro ao verificar territórios expirados:', checkError)
-         return
-       }
-
-       if (expiredTerritories && expiredTerritories.length > 0) {
-         console.log('🕐 Encontrados territórios expirados:', expiredTerritories.length)
-         
-         // Processar cada território expirado
-         for (const territory of expiredTerritories) {
-           try {
-             // Registrar no histórico de conquistas como "esgotada"
-             await supabase
-               .from('conquest_history')
-               .insert({
-                 territory_id: territory.id,
-                 conquering_team: 'expired',
-                 conquered_team: territory.team_id,
-                 area_lost: territory.area,
-                 player_id: territory.player_id
-               })
-
-             // Descontar pontos do jogador
-             const { data: player } = await supabase
-               .from('users')
-               .select('score')
-               .eq('id', territory.player_id)
-               .single()
-
-             if (player) {
-               const lostAreaPoints = Math.round(territory.area * 1000)
-               const newScore = Math.max(0, (player.score || 0) - lostAreaPoints)
-               await supabase
-                 .from('users')
-                 .update({ score: newScore })
-                 .eq('id', territory.player_id)
-             }
-
-             // Remover o território expirado
-             await supabase
-               .from('territories')
-               .delete()
-               .eq('id', territory.id)
-
-             console.log('🗑️ Território expirado removido:', territory.id)
-           } catch (territoryError) {
-             console.error('❌ Erro ao processar território expirado:', territory.id, territoryError)
-           }
-         }
-
-         // Atualizar dados após processamento
-         console.log('🔄 Atualizando dados após remoção de territórios expirados...')
-         await fetchTerritories()
-         await fetchOnlineUsers()
-       } else {
-         console.log('✅ Nenhum território expirado encontrado')
-       }
-     } catch (error) {
-       console.error('❌ Erro ao verificar áreas expiradas:', error)
-     }
-   }
-
-
-
+   // Expiração desativada aqui: gerida via RealtimeContext
 
 
   return {
