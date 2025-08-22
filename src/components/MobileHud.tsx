@@ -36,8 +36,24 @@ export function MobileHud() {
     }
   }
 
+  // Normalizar estatísticas para evitar undefined (useTerritoryStats pode expor apenas 'total')
+  const normalizeTeamStats = (raw: any) => {
+    const total = Number(raw?.total ?? 0)
+    const conquered = Number(raw?.conquered ?? total)
+    const lost = Number(raw?.lost ?? 0)
+    const expired = Number(raw?.expired ?? 0)
+    const net = Number(raw?.net ?? (conquered - lost - expired))
+    return { total, conquered, lost, expired, net }
+  }
+
+  const normalizedStats = {
+    green: normalizeTeamStats((stats as any).green),
+    blue: normalizeTeamStats((stats as any).blue),
+    red: normalizeTeamStats((stats as any).red)
+  }
+
   const maxArea = Math.max(
-    ...Object.values(stats).map(team => Math.max(team.conquered, team.lost, team.expired))
+    ...Object.values(normalizedStats).map(team => Math.max(team.conquered, team.lost, team.expired))
   )
 
   const getBarWidth = (value: number) => {
@@ -59,7 +75,7 @@ export function MobileHud() {
       <div className="space-y-2">
         {(['green', 'blue', 'red'] as const).map((teamColor) => {
           const teamName = teamColor === 'green' ? 'Verdes' : teamColor === 'blue' ? 'Azul' : 'Vermelho'
-          const teamStats = stats[teamColor]
+          const teamStats = normalizedStats[teamColor]
           const teamColorHex = getTeamColor(teamColor)
           
           return (
@@ -73,7 +89,7 @@ export function MobileHud() {
                   <span className="text-white font-semibold">{teamName}</span>
                 </div>
                 <span className={`font-semibold ${teamStats.net >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {teamStats.net >= 0 ? '+' : ''}{teamStats.net.toFixed(1)}
+                  {teamStats.net >= 0 ? '+' : ''}{Number(teamStats.net).toFixed(1)}
                 </span>
               </div>
               
@@ -81,34 +97,34 @@ export function MobileHud() {
               <div className="space-y-1">
                 <div className="flex justify-between text-xs">
                   <span className="text-green-400">C:</span>
-                  <span className="text-white">{teamStats.conquered.toFixed(1)}</span>
+                  <span className="text-white">{Number(teamStats.conquered).toFixed(1)}</span>
                 </div>
                 <div className="w-full bg-gray-600 rounded-full h-1">
                   <div 
                     className="bg-green-500 h-1 rounded-full transition-all duration-300"
-                    style={{ width: `${getBarWidth(teamStats.conquered)}%` }}
+                    style={{ width: `${getBarWidth(Number(teamStats.conquered))}%` }}
                   />
                 </div>
                 
                 <div className="flex justify-between text-xs">
                   <span className="text-red-400">P:</span>
-                  <span className="text-white">{teamStats.lost.toFixed(1)}</span>
+                  <span className="text-white">{Number(teamStats.lost).toFixed(1)}</span>
                 </div>
                 <div className="w-full bg-gray-600 rounded-full h-1">
                   <div 
                     className="bg-red-500 h-1 rounded-full transition-all duration-300"
-                    style={{ width: `${getBarWidth(teamStats.lost)}%` }}
+                    style={{ width: `${getBarWidth(Number(teamStats.lost))}%` }}
                   />
                 </div>
                 
                 <div className="flex justify-between text-xs">
                   <span className="text-orange-400">E:</span>
-                  <span className="text-white">{teamStats.expired.toFixed(1)}</span>
+                  <span className="text-white">{Number(teamStats.expired).toFixed(1)}</span>
                 </div>
                 <div className="w-full bg-gray-600 rounded-full h-1">
                   <div 
                     className="bg-orange-500 h-1 rounded-full transition-all duration-300"
-                    style={{ width: `${getBarWidth(teamStats.expired)}%` }}
+                    style={{ width: `${getBarWidth(Number(teamStats.expired))}%` }}
                   />
                 </div>
               </div>

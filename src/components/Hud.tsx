@@ -42,8 +42,16 @@ export function Hud() {
 
 
   // Calcular largura máxima para os gráficos
+  // Normalizar para evitar undefined em iOS
+  const normalizeTeamStats = (raw: any) => ({ total: Number(raw?.total ?? 0) })
+  const normalizedStats = {
+    green: normalizeTeamStats((stats as any).green),
+    blue: normalizeTeamStats((stats as any).blue),
+    red: normalizeTeamStats((stats as any).red)
+  }
+
   const maxArea = Math.max(
-    ...Object.values(stats).map(team => team.total)
+    ...Object.values(normalizedStats).map(team => team.total)
   )
 
   const getBarWidth = (value: number) => {
@@ -61,7 +69,7 @@ export function Hud() {
       <div className="space-y-4">
         {(['green', 'blue', 'red'] as const).map((teamColor) => {
           const teamName = teamColor === 'green' ? 'Verdes' : teamColor === 'blue' ? 'Azul' : 'Vermelho'
-          const teamStats = stats[teamColor]
+          const teamStats = normalizedStats[teamColor]
           const teamColorHex = getTeamColor(teamColor)
           
           return (
