@@ -121,20 +121,20 @@ export function MobileHud() {
   }, [])
 
   return (
-    <div className={`mobile-hud bg-gray-800 p-3 rounded-xl shadow-lg ${isIPhone ? 'text-xs' : 'text-sm'}`} 
-         style={{ border: `2px solid ${myColor}`, width: '100%' }}>
-      <div className="flex items-center justify-between gap-3">
-        {/* Texto à esquerda */}
-        <div className="flex-1 text-left">
-          <div className="text-white font-semibold mb-1">Território Total Conquistado {sumTotal.toFixed(1)} km²</div>
-          <div className="text-gray-300">Nº Territórios: <span className="text-white">{territories.length}</span></div>
-          <div className="text-gray-300">Jogadores Online: <span className="text-white">{onlineUsers.length}{totalUsers ? `/${totalUsers}` : ''}</span></div>
-          <div className="mt-1 text-gray-300">A ganhar: <span className="font-semibold" style={{ color: getTeamColor(leader.k as any) }}>{leader.k.toUpperCase()}</span></div>
+    <div className={`mobile-hud bg-gray-800 px-2 py-1.5 rounded-lg shadow-lg ${isIPhone ? 'text-[11px]' : 'text-sm'}`} 
+         style={{ border: `1px solid ${myColor}`, width: '100%' }}>
+      <div className="flex items-center justify-between gap-2">
+        {/* Texto à esquerda (linha única para menor altura) */}
+        <div className="flex-1 text-left text-[11px] md:text-[12px] leading-tight">
+          <div className="text-white font-semibold">
+            Território Total {sumTotal.toFixed(1)} km² · Territórios {territories.length} · Online {onlineUsers.length}{totalUsers ? `/${totalUsers}` : ''}
+          </div>
+          <div className="text-gray-300 mt-0.5">A ganhar: <span className="font-semibold" style={{ color: getTeamColor(leader.k as any) }}>{leader.k.toUpperCase()}</span></div>
         </div>
 
-        {/* Pie à direita com SVG para separadores limpos */}
-        <div className="shrink-0" style={{ width: 120, height: 120 }}>
-          <svg viewBox="0 0 42 42" width="120" height="120" aria-label="Distribuição por equipa">
+        {/* Pie à direita com SVG (menor) */}
+        <div className="shrink-0" style={{ width: 88, height: 88 }}>
+          <svg viewBox="0 0 42 42" width="88" height="88" aria-label="Distribuição por equipa">
             <circle cx="21" cy="21" r="20" fill="#111827" stroke="#ffffff" strokeWidth="1.5" />
             {(() => {
               const r = 16.5
@@ -154,7 +154,7 @@ export function MobileHud() {
                     cx="21" cy="21" r={r}
                     fill="transparent"
                     stroke={s.color}
-                    strokeWidth="7.5"
+                    strokeWidth="6"
                     strokeDasharray={`${s.len} ${c - s.len}`}
                     strokeDashoffset={-offset}
                     transform="rotate(-90 21 21)"
