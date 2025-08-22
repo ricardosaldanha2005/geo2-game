@@ -21,8 +21,8 @@ export function useGeo() {
   }
 
   useEffect(() => {
-    // Verificar se estamos no modo mock
-    const gameMode = localStorage.getItem('gameMode')
+    // Verificar se estamos no modo mock (usar storage seguro para iOS privado)
+    const gameMode = (typeof window !== 'undefined' && window.localStorage) ? localStorage.getItem('gameMode') : null
     const isMockMode = gameMode === 'mock'
     
     // Se estiver em modo mock, usar posição fixa

@@ -11,6 +11,7 @@ import { Hud } from '@/components/Hud'
 import { MobileHud } from '@/components/MobileHud'
 import { MobileControls } from '@/components/MobileControls'
 import { RealtimeProvider } from '@/context/RealtimeContext'
+import { safeStorage } from '@/lib/storage'
 
 
 import './styles/index.css'
@@ -25,8 +26,9 @@ function GameLayout() {
   
   // Ativar modo live por defeito
   useEffect(() => {
-    if (!localStorage.getItem('gameMode')) {
-      localStorage.setItem('gameMode', 'live')
+    const hasMode = safeStorage.getItem('gameMode')
+    if (!hasMode) {
+      safeStorage.setItem('gameMode', 'live')
     }
   }, [])
 

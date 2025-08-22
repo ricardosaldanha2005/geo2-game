@@ -3,6 +3,7 @@ import { useGeo } from '@/hooks/useGeo'
 import { useTerritoryStats } from '@/hooks/useTerritoryStats'
 import { useMobile } from '@/hooks/useMobile'
 import { useState, useEffect } from 'react'
+import { safeStorage } from '@/lib/storage'
 
 export function MobileHud() {
   const { territories, onlineUsers } = useRealtime()
@@ -13,7 +14,7 @@ export function MobileHud() {
   
   // Carregar modo do jogo do localStorage
   useEffect(() => {
-    const savedMode = localStorage.getItem('gameMode')
+    const savedMode = safeStorage.getItem('gameMode')
     setGameMode(savedMode || 'live')
   }, [])
   
@@ -21,7 +22,7 @@ export function MobileHud() {
   const toggleGameMode = () => {
     const newMode = gameMode === 'mock' ? 'live' : 'mock'
     setGameMode(newMode)
-    localStorage.setItem('gameMode', newMode)
+    safeStorage.setItem('gameMode', newMode)
     // Recarregar a página para aplicar as mudanças
     window.location.reload()
   }
