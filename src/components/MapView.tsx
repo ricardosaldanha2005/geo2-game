@@ -60,7 +60,7 @@ const normalizeTeam = (team?: string): 'green' | 'blue' | 'red' => {
 
 const getPlayerIcon = (user: any, onlineUsers: any[], fallbackTeam?: string) => {
   const userData = onlineUsers.find(u => u.id === user?.id)
-  const team = normalizeTeam((userData as any)?.team || (userData as any)?.team_id || fallbackTeam || (user as any)?.user_metadata?.team)
+  const team = normalizeTeam((userData as any)?.team || (userData as any)?.team_id || fallbackTeam)
   const teamColor = team === 'blue' ? '#2563eb' : team === 'red' ? '#dc2626' : '#16a34a'
   const playerName = (userData as any)?.name || user?.user_metadata?.name || 'Jogador'
   return makeLabeledIcon(teamColor, playerName)
@@ -223,7 +223,7 @@ export function MapView() {
     (currentPlayer as any)?.team ||
     (onlineUsers.find(u => (u as any).id === user?.id) as any)?.team ||
     (onlineUsers.find(u => (u as any).id === user?.id) as any)?.team_id ||
-    (user as any)?.user_metadata?.team
+    'green'
   )
   
   // Posição do marker simplificada para performance
