@@ -3,6 +3,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useTrace } from '@/hooks/useTrace'
 import { useMobile } from '@/hooks/useMobile'
 import { Login } from '@/pages/Login'
+import Logout from '@/pages/Logout'
 import { MapView } from '@/components/MapView'
 import { Controls } from '@/components/Controls'
 import { Leaderboard } from '@/pages/Leaderboard'
@@ -102,6 +103,7 @@ function App() {
         <RealtimeProvider>
           <Routes>
             <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
+            <Route path="/logout" element={<Logout />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/" element={<GameLayout />} />
