@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
+import { safeStorage } from '@/lib/storage'
 
 export function Login() {
   const { signIn, signUp } = useAuth()
@@ -10,6 +11,20 @@ export function Login() {
   const [team, setTeam] = useState<'green' | 'blue' | 'red'>('green')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [gameMode, setGameMode] = useState<'live' | 'mock'>('live')
+
+  useEffect(() => {
+    const saved = safeStorage.getItem('gameMode') as 'live' | 'mock' | null
+    if (saved === 'mock' || saved === 'live') {
+      setGameMode(saved)
+    }
+  }, [])
+
+  const toggleGameMode = () => {
+    const next = gameMode === 'mock' ? 'live' : 'mock'
+    setGameMode(next)
+    safeStorage.setItem('gameMode', next)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -52,6 +67,27 @@ export function Login() {
         </div>
         
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {/* Toggle de Modo (GPS real vs Mock) para iPhone/privado */}
+          <div className="p-3 bg-gray-800 rounded border border-gray-700">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-gray-300">Modo de localização</div>
+              <button
+                type="button"
+                onClick={toggleGameMode}
+                className={`px-3 py-1 rounded text-xs font-semibold transition-colors ${
+                  gameMode === 'mock' ? 'bg-orange-600 hover:bg-orange-700 text-white' : 'bg-green-600 hover:bg-green-700 text-white'
+                }`}
+              >
+                {gameMode === 'mock' ? '🎭 Teste (Mock)' : '🌍 Real (GPS)'}
+              </button>
+            </div>
+            <p className="text-xs text-gray-400 mt-2">
+              {gameMode === 'mock'
+                ? 'Usa uma posição fixa para testar sem GPS. Ideal no iPhone em privado.'
+                : 'Usa o GPS real do dispositivo.'}
+            </p>
+          </div>
+
           <div className="rounded-md shadow-sm -space-y-px">
             {isSignUp && (
               <div>
