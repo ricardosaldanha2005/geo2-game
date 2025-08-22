@@ -7,7 +7,7 @@ const Admin: React.FC = () => {
   const [message, setMessage] = useState('');
   const { user } = useAuth();
 
-  const showMessage = (msg: string, type: 'success' | 'error' = 'success') => {
+  const showMessage = (msg: string, _type: 'success' | 'error' = 'success') => {
     setMessage(msg);
     setTimeout(() => setMessage(''), 5000);
   };
@@ -17,6 +17,12 @@ const Admin: React.FC = () => {
     
     setLoading(true);
     try {
+      if (!supabase) {
+        showMessage('❌ Erro: Supabase não disponível', 'error');
+        setLoading(false);
+        return;
+      }
+      
       const { error } = await supabase
         .from('users')
         .update({ score: 0 })
@@ -36,6 +42,12 @@ const Admin: React.FC = () => {
     
     setLoading(true);
     try {
+      if (!supabase) {
+        showMessage('❌ Erro: Supabase não disponível', 'error');
+        setLoading(false);
+        return;
+      }
+      
       // Buscar todos os usuários
       const { data: users, error: usersError } = await supabase
         .from('users')
@@ -84,6 +96,12 @@ const Admin: React.FC = () => {
     
     setLoading(true);
     try {
+      if (!supabase) {
+        showMessage('❌ Erro: Supabase não disponível', 'error');
+        setLoading(false);
+        return;
+      }
+      
       // Apagar todos os territórios
       const { error: territoriesError } = await supabase
         .from('conquest_history')
@@ -113,6 +131,12 @@ const Admin: React.FC = () => {
     
     setLoading(true);
     try {
+      if (!supabase) {
+        showMessage('❌ Erro: Supabase não disponível', 'error');
+        setLoading(false);
+        return;
+      }
+      
       const { data, error } = await supabase
         .from('conquest_history')
         .delete()
@@ -133,6 +157,12 @@ const Admin: React.FC = () => {
     
     setLoading(true);
     try {
+      if (!supabase) {
+        showMessage('❌ Erro: Supabase não disponível', 'error');
+        setLoading(false);
+        return;
+      }
+      
       // Buscar territórios do jogador atual
       const { data: territories, error: territoriesError } = await supabase
         .from('conquest_history')

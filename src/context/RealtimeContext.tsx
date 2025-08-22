@@ -325,7 +325,7 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
     setLoading(false);
 
     // Set up real-time subscriptions para conquest_history
-    const territoriesSubscription = supabase
+    const territoriesSubscription = supabase!
       .channel('conquest_history_changes')
       .on('postgres_changes', 
         { event: 'INSERT', schema: 'public', table: 'conquest_history' },
@@ -343,7 +343,7 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
       )
       .subscribe();
 
-    const onlineUsersSubscription = supabase
+    const onlineUsersSubscription = supabase!
       .channel('online_users_changes')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'online_users' },
@@ -370,7 +370,7 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
         console.log('🕐 Buscando territórios para EXPIRAR criados antes de:', oneMinuteAgo);
         
         // Primeiro, buscar TODOS os territórios ativos para debug
-        const { data: allActive, error: allError } = await supabase
+        const { data: allActive } = await supabase
           .from('conquest_history')
           .select('id, created_at, status')
           .eq('status', 'active');

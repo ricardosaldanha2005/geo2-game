@@ -23,10 +23,10 @@ function GameLayout() {
   // Adicionar sistema de traços
   useTrace()
   
-  // Ativar modo mock para controles funcionarem
+  // Ativar modo live por defeito
   useEffect(() => {
     if (!localStorage.getItem('gameMode')) {
-      localStorage.setItem('gameMode', 'mock')
+      localStorage.setItem('gameMode', 'live')
     }
   }, [])
 
