@@ -9,7 +9,7 @@ export function usePawnControls() {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       // Verificar se estamos no modo mock
-      const gameMode = localStorage.getItem('gameMode')
+      const gameMode = (typeof window !== 'undefined' && window.localStorage) ? localStorage.getItem('gameMode') : null
       const isMockMode = gameMode === 'mock'
       
       if (!isMockMode) {

@@ -150,7 +150,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   updatePlayerPosition: async (position: [number, number]) => {
     // Verificar se estamos no modo mock
-    const gameMode = localStorage.getItem('gameMode')
+    const gameMode = (typeof window !== 'undefined' && window.localStorage) ? localStorage.getItem('gameMode') : null
     const isMockMode = gameMode === 'mock'
     
     // Atualização simplificada para performance
